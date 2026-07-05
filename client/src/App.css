@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+:root {
+    /* Fonts */
+    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+
+    /* Radius */
+    --radius: 0.75rem;
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+    --radius-2xl: calc(var(--radius) + 8px);
+
+    /* Colors */
+    --background: #0B1014;
+    --foreground: #f8fafc;
+
+    --card: #141b22;
+    --card-foreground: #f8fafc;
+
+    --popover: #141b22;
+    --popover-foreground: #f8fafc;
+
+    --primary: #9adb45;
+    --primary-foreground: #0B1014;
+
+    --secondary: #1e293b;
+    --secondary-foreground: #f8fafc;
+
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
+
+    --accent: #3b82f6;
+    --accent-foreground: #f8fafc;
+
+    --destructive: #ef4444;
+    --destructive-foreground: #f8fafc;
+
+    --border: #334155;
+    --input: #334155;
+    --ring: #9adb45;
+
+    /* Chess board */
+    --board-light: #ebecd0;
+    --board-dark: #739552;
+
+    /* Effects */
+    --shadow-glow: 0 0 60px -10px color-mix(in srgb, var(--primary) 55%, transparent);
+
+    --gradient-hero:
+        radial-gradient(1200px 600px at 15% -10%,
+            color-mix(in srgb, var(--primary) 22%, transparent),
+            transparent 60%),
+        radial-gradient(900px 500px at 100% 0%,
+            color-mix(in srgb, var(--accent) 18%, transparent),
+            transparent 55%);
+}
+
+.dark {
+    --background: #0B1014;
+    --foreground: #f8fafc;
+}
+
+@layer base {
+    * {
+        border-color: var(--border);
+    }
+
+    html,
+    body {
+        background-color: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+        font-family: var(--font-display);
+        letter-spacing: -0.02em;
+    }
+}
+
+.header {
+    width: 100%;
+    background-image: var(--gradient-hero);
+    border-bottom: 1px solid var(--border);
+
+    .pill {
+        background-color: color-mix(in srgb, var(--card) 50%, transparent);
+        color: var(--muted-foreground);
+        border: 1px solid var(--border);
+    }
+
+    .heading-bottom {
+        color: var(--primary);
+    }
+
+    .header-bottom {
+        color: var(--muted-foreground);
+    }
+}

@@ -1,0 +1,43 @@
+.gambit-logo {
+    background-color: color-mix(in srgb, var(--primary) 15%, transparent);
+}
+
+.home-container {
+    background-color: var(--background);
+}
+
+.home-navbar {
+    border-color: var(--border);
+    background-color: color-mix(in srgb, var(--background) 80%, transparent);
+}
+
+.home-text-primary {
+    color: var(--foreground);
+}
+
+.home-text-muted {
+    color: var(--muted-foreground);
+}
+
+.home-btn-primary {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+}
+
+.home-play-btn {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    box-shadow: var(--shadow-glow);
+}
+
+.home-pill-icon {
+    background-color: var(--primary);
+}
+
+.trophy-logo {
+    background-color: color-mix(in srgb, var(--primary) 15%, transparent);
+}
+
+.home-feature-section {
+    border-bottom: 1px solid var(--border);
+}
