@@ -39,7 +39,7 @@ export const Home = () => {
                         A clean, fast place to play chess. Sign in, pick a time control, and start playing in seconds.
                     </div>
                     <div className="mt-8 md:mt-10">
-                        <button className="px-8 py-3 rounded-md font-bold text-lg transition-opacity hover:opacity-90 shadow-lg home-play-btn">Play Now</button>
+                        <button className="px-8 py-3 rounded-md font-bold text-lg transition-opacity hover:opacity-90 shadow-lg home-play-btn cursor-pointer">Play Now</button>
                     </div>
                 </div>
             </div>
