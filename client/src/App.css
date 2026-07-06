@@ -84,23 +84,3 @@
         letter-spacing: -0.02em;
     }
 }
-
-.header {
-    width: 100%;
-    background-image: var(--gradient-hero);
-    border-bottom: 1px solid var(--border);
-
-    .pill {
-        background-color: color-mix(in srgb, var(--card) 50%, transparent);
-        color: var(--muted-foreground);
-        border: 1px solid var(--border);
-    }
-
-    .heading-bottom {
-        color: var(--primary);
-    }
-
-    .header-bottom {
-        color: var(--muted-foreground);
-    }
-}
