@@ -1,0 +1,25 @@
+model ChessProfile {
+  id String @id @default(cuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  totalGames Int @default(0)
+
+  totalGamesWon  Int @default(0)
+  totalGamesLost Int @default(0)
+  totalGamesDraw Int @default(0)
+
+  totalWhiteWins Int @default(0)
+  totalBlackWins Int @default(0)
+
+  blitzRating     Int @default(1200)
+  rapidRating     Int @default(1200)
+  classicalRating Int @default(1200)
+  bulletRating    Int @default(1200)
+
+  highestRating Int @default(1200)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

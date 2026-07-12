@@ -1,8 +1,14 @@
 import { useState } from 'react'
 import './login.css'
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-    const [isLogin, setIsLogin] = useState(true)
+    const [isLogin, setIsLogin] = useState(true);
+    const navigate = useNavigate();
+
+    const handleLogoClick = () => {
+        navigate("/");
+    }
 
     return (
         <div className="h-screen w-screen flex login-wrapper overflow-y-auto">
@@ -10,7 +16,7 @@ const Login = () => {
             <div className="hidden md:flex w-1/2 left-wrapper justify-center relative">
                 <div className='flex flex-col mt-10 w-[80%] h-[90%] justify-between'>
                     <div className="w-full flex">
-                        <div className="flex items-center cursor-pointer">
+                        <div className="flex items-center cursor-pointer" onClick={handleLogoClick}>
                             <span className="gambit-logo h-10 w-10 flex justify-center items-center rounded-lg">
                                 <img src='./logo.svg' alt="logo" className="h-6 w-6" />
                             </span>
@@ -91,7 +97,7 @@ const Login = () => {
                             />
                         </div>
 
-                        <button className='login-button w-full font-semibold rounded-xl py-2.5 mt-4 hover:opacity-90 transition-opacity'>
+                        <button className='login-button w-full font-semibold rounded-xl py-2.5 mt-4 hover:opacity-90 transition-opacity cursor-pointer'>
                             {isLogin ? 'Log in' : 'Sign up'}
                         </button>
                     </form>

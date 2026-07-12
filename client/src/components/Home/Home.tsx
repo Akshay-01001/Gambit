@@ -1,11 +1,18 @@
+import { useNavigate } from 'react-router-dom';
 import './Home.css';
 
 export const Home = () => {
+    const navigate = useNavigate();
+
+    const handleLoginButtonClick = () => {
+        navigate("/login")
+    }
+
     return (
         <div className="h-screen w-screen overflow-y-auto home-container">
             <div className="w-full h-16 flex items-center justify-between px-6 md:px-10 border-b z-50 sticky top-0 backdrop-blur-md home-navbar">
                 {/* Left: Logo */}
-                <div className="flex items-center flex-1">
+                <div className="flex items-center cursor-pointer">
                     <span className="gambit-logo h-9 w-9 flex justify-center p-2 rounded-md">
                         <img src='./logo.svg' alt="logo" />
                     </span>
@@ -15,13 +22,11 @@ export const Home = () => {
                 {/* Center: Navigation */}
                 <div className="hidden md:flex items-center justify-center gap-8 flex-1">
                     <a href="#" className="font-medium hover:opacity-75 transition-opacity home-text-primary">Home</a>
-                    <a href="#" className="font-medium hover:opacity-75 transition-opacity home-text-muted">Profile</a>
                 </div>
 
                 {/* Right: Auth Buttons */}
-                <div className="flex items-center justify-end flex-1 gap-4 md:gap-6">
-                    <button className="font-medium hover:opacity-75 transition-opacity home-text-primary">Login</button>
-                    <button className="px-4 py-1.5 md:px-5 md:py-2 rounded-md font-bold transition-opacity hover:opacity-90 home-btn-primary">Sign up</button>
+                <div className="flex items-center justify-end gap-4 md:gap-6">
+                    <button className="px-4 py-1.5 md:px-5 md:py-2 rounded-md font-bold transition-opacity hover:opacity-90 home-btn-primary" onClick={handleLoginButtonClick}>Login</button>
                 </div>
             </div>
 

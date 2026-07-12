@@ -1,0 +1,22 @@
+model User {
+  id String @id @default(cuid())
+
+  username  String  @unique
+  email     String  @unique
+  avatarUrl String?
+  bio       String?
+
+  country String?
+  gender  Gender?
+
+  isCompletedOnboarding Boolean @default(false)
+  isDeleted             Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  auth         Auth?
+  chessProfile ChessProfile?
+
+  refreshTokens RefreshToken[]
+}

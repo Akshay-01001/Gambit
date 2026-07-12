@@ -22,6 +22,7 @@
 .home-btn-primary {
     background-color: var(--primary);
     color: var(--primary-foreground);
+    cursor: pointer;
 }
 
 .home-play-btn {
