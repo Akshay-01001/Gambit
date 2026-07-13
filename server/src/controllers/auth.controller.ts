@@ -4,6 +4,7 @@ import { registerSchema, loginSchema } from "../utils/validations";
 import { sendSuccess, sendError } from "../utils/apiResponse";
 import { generateTokenPair } from "../utils/tokens";
 import { prisma } from "../lib/prisma";
+import { verifyGoogleIdToken } from "../lib/google";
 
 export const registerUser = async (req: Request, res: Response) => {
     try {
@@ -239,6 +240,158 @@ export const loginUser = async (req: Request, res: Response) => {
             },
         });
 
+    } catch (error) {
+        const errorMessage =
+            error instanceof Error ? error.message : "Something went wrong";
+        return sendError(res, {
+            code: "INTERNAL_ERROR",
+            message: errorMessage,
+        });
+    }
+};
+
+export const googleLogin = async (req: Request, res: Response) => {
+    try {
+        const { idToken } = req.body;
+
+        if (!idToken) {
+            return sendError(res, {
+                code: "BAD_REQUEST",
+                message: "Invalid Token ID"
+            });
+        }
+
+        const userDetails = await verifyGoogleIdToken(idToken);
+        const isProduction = process.env.NODE_ENV === "production";
+
+        const existUser = await prisma.auth.findFirst({
+            where: {
+                user: {
+                    email: userDetails.email
+                }
+            },
+            include: {
+                user: true
+            }
+        });
+
+        if (existUser && existUser.provider === "LOCAL") {
+            return sendError(res, {
+                code: "BAD_REQUEST",
+                message: "Please link your account with google from settings"
+            });
+        }
+
+        if (existUser && existUser.provider === "GOOGLE") {
+            const { accessToken, refreshToken } = generateTokenPair({
+                userId: existUser.userId,
+                email: existUser.user.email
+            });
+
+            await prisma.refreshToken.deleteMany({
+                where: {
+                    userId: existUser.userId
+                }
+            });
+
+            await prisma.refreshToken.create({
+                data: {
+                    token: refreshToken,
+                    userId: existUser.userId,
+                    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                }
+            });
+
+            res.cookie("accessToken", accessToken, {
+                httpOnly: true,
+                secure: isProduction,
+                sameSite: "strict",
+                maxAge: 30 * 60 * 1000, // 30 minutes
+            });
+
+            res.cookie("refreshToken", refreshToken, {
+                httpOnly: true,
+                secure: isProduction,
+                sameSite: "strict",
+                maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            });
+
+            return res.status(200).json({
+                success: true,
+                message: "Login Successful",
+                user: {
+                    email: existUser.user.email,
+                    gender: existUser.user.gender,
+                    isOnboardingCompleted: existUser.user.isCompletedOnboarding,
+                    avatar_url: existUser.user.avatarUrl,
+                    country: existUser.user.country
+                }
+            });
+        }
+
+        const tempUsername = `user_${Date.now().toString(36)}${Math.random().toString(36).substring(2, 7)}`;
+
+        const newUserAuth = await prisma.$transaction(async (tx) => {
+            const user = await tx.user.create({
+                data: {
+                    email: userDetails.email,
+                    username: tempUsername,
+                    isCompletedOnboarding: false,
+                    avatarUrl: userDetails.picture,
+                }
+            });
+
+            const auth = await tx.auth.create({
+                data: {
+                    userId: user.id,
+                    provider: "GOOGLE",
+                    providerId: userDetails.googleId,
+                    isVerified: userDetails.emailVerified || false,
+                },
+                include: { user: true }
+            });
+
+            return auth;
+        });
+
+        const { accessToken, refreshToken } = generateTokenPair({
+            userId: newUserAuth.userId,
+            email: newUserAuth.user.email
+        });
+
+        await prisma.refreshToken.create({
+            data: {
+                token: refreshToken,
+                userId: newUserAuth.userId,
+                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+            }
+        });
+
+        res.cookie("accessToken", accessToken, {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: "strict",
+            maxAge: 30 * 60 * 1000, // 30 minutes
+        });
+
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Account created. Please complete onboarding.",
+            user: {
+                email: newUserAuth.user.email,
+                gender: newUserAuth.user.gender,
+                isOnboardingCompleted: newUserAuth.user.isCompletedOnboarding,
+                avatar_url: newUserAuth.user.avatarUrl,
+                country: newUserAuth.user.country
+            }
+        });
     } catch (error) {
         const errorMessage =
             error instanceof Error ? error.message : "Something went wrong";
