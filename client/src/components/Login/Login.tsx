@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import './login.css'
 import { useNavigate } from 'react-router-dom';
+import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google"
+import axios from 'axios';
 
 const Login = () => {
     const [isLogin, setIsLogin] = useState(true);
@@ -70,10 +72,20 @@ const Login = () => {
                         </button>
                     </div>
 
-                    <button className='google-btn w-full flex items-center justify-center gap-3 border rounded-xl py-2.5 transition-colors'>
-                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="h-5 w-5" />
-                        <span className='text-sm font-medium'>Continue with Google</span>
-                    </button>
+                    <GoogleOAuthProvider clientId='664700514063-n59iij2qkg3tq7ep1590omtvklfh5kr3.apps.googleusercontent.com'>
+                        <GoogleLogin
+                            onSuccess={async (credentialResponse) => {
+                                console.log(credentialResponse);
+                                await axios.post("http://localhost:8000/api/auth/google", {
+                                    idToken: credentialResponse.credential
+                                }, {
+                                    withCredentials: true
+                                })
+                            }}
+
+                        >
+                        </GoogleLogin>
+                    </GoogleOAuthProvider>
 
                     <div className="flex items-center w-full">
                         <div className="grow border-t divider"></div>
