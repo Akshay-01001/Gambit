@@ -3,8 +3,8 @@ import { Home } from "./components/Home/Home.js";
 import Login from "./components/Login/Login";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import OnboardingPage from "./components/Onboarding/OnboardingPage.js";
-import { useEffect } from "react";
-import axios from "axios";
+import ProtectedRoute from "./components/ProtectedRoute.js";
+import { AuthProvider } from "./contexts/AuthContext.js";
 
 const router = createBrowserRouter([
     {
@@ -16,24 +16,22 @@ const router = createBrowserRouter([
         element: <Login />,
     },
     {
-        path: "/onboarding",
-        element: <OnboardingPage />
+        element: <ProtectedRoute />,
+        children: [
+            {
+                path: "/onboarding",
+                element: <OnboardingPage />
+            },
+        ]
     }
 ]);
 
 function App() {
-
-    useEffect(() => {
-        const fetUserDetails = async () => {
-            const data = await axios.get("http://localhost:8000/api/auth/me", {
-                withCredentials: true
-            });
-            return data;
-        }
-        console.log(fetUserDetails());
-    }, []);
-
-    return <RouterProvider router={router} />;
+    return (
+        <AuthProvider>
+            <RouterProvider router={router} />
+        </AuthProvider>
+    )
 }
 
 export default App;
