@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import { registerSchema, loginSchema } from "../utils/validations";
 import { sendSuccess, sendError } from "../utils/apiResponse";
-import { generateTokenPair } from "../utils/tokens";
+import { generateAccessToken, generateTokenPair } from "../utils/tokens";
 import { prisma } from "../lib/prisma";
 import { verifyGoogleIdToken } from "../lib/google";
 
@@ -403,3 +403,55 @@ export const googleLogin = async (req: Request, res: Response) => {
         });
     }
 };
+
+export const generateNewAccessToken = async (req: Request, res: Response) => {
+    try {
+        const userId = req.user?.id;
+
+        const userToken = await prisma.refreshToken.findFirst({
+            where: {
+                userId,
+                expiresAt: {
+                    gt: new Date()
+                }
+            },
+            include: {
+                user: true
+            }
+        });
+
+        if (!userToken) {
+            return sendError(res, {
+                code: "UNAUTHORIZED",
+                message: "Please Login",
+            });
+        }
+
+        const tokenPayload = {
+            email: userToken.user.email,
+            userId: userToken.userId
+        }
+
+        const accessToken = await generateAccessToken(tokenPayload);
+        const isProduction = process.env.NODE_ENV === "production";
+
+        res.cookie("accessToken", accessToken, {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: "strict",
+            maxAge: 30 * 60 * 1000, // 30 minutes
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Token Generated Successfully"
+        })
+    } catch (error) {
+        const errorMessage =
+            error instanceof Error ? error.message : "Something went wrong";
+        return sendError(res, {
+            code: "INTERNAL_ERROR",
+            message: errorMessage,
+        });
+    }
+}
