@@ -7,7 +7,7 @@ export const getUserDetails = async (req: Request, res: Response) => {
         const userId = req.user?.id;
 
         if (!userId) {
-            sendError(res, {
+            return sendError(res, {
                 code: "UNAUTHORIZED",
                 message: "Unathorized"
             });
@@ -21,7 +21,7 @@ export const getUserDetails = async (req: Request, res: Response) => {
         });
 
         if (!userDetails) {
-            sendError(res, {
+            return sendError(res, {
                 code: "UNAUTHORIZED",
                 message: "Unathorized"
             });

@@ -1,15 +1,21 @@
 import { useState } from 'react'
 import './login.css'
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google"
 import axios from 'axios';
+import { useAuth } from '../../hooks/useAuth';
 
 const Login = () => {
     const [isLogin, setIsLogin] = useState(true);
     const navigate = useNavigate();
+    const { isLoggedIn } = useAuth();
 
     const handleLogoClick = () => {
         navigate("/");
+    }
+
+    if (isLoggedIn) {
+        return <Navigate to={"/"} />
     }
 
     return (

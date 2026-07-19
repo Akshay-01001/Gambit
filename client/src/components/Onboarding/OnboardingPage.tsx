@@ -1,6 +1,14 @@
 import CountrySelect from './CountrySelect'
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 
 const OnboardingPage = () => {
+    const { isOnboarded } = useAuth();
+
+    if (isOnboarded) {
+        return <Navigate to="/" replace />;
+    }
+
     return (
         <div className='h-screen w-screen bg-background'>
             <div className='mx-auto flex min-h-screen max-w-2xl flex-col px-6 py-10 border  border-red-500'>
