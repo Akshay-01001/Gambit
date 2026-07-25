@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import React, { createContext, useEffect, useState } from 'react'
 import { API_BASE_URL } from '../utils/constants';
 import { useDispatch } from 'react-redux';
@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                             )
                         }
                     }
-                } catch (refreshError) {
+                } catch {
                     setIsLoggedIn(false);
                 }
             } else {
@@ -61,7 +61,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     useEffect(() => {
-        fetUserDetails();
+        const timeOutId = setTimeout(() => {
+            fetUserDetails();
+        }, 0);
+
+        return () => {
+            clearTimeout(timeOutId);
+        };
     }, []);
 
     return (
