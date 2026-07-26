@@ -63,7 +63,7 @@ export const Home = () => {
                 </div>
             </div>
 
-            <div className='home-feature-section flex flex-col md:flex-row items-start md:items-center justify-around py-12 md:py-0 md:h-[200px] gap-10 md:gap-4 px-6 md:px-10'>
+            <div className='home-feature-section flex flex-col md:flex-row items-start md:items-center justify-around py-12 md:py-0 md:h-50 gap-10 md:gap-4 px-6 md:px-10'>
                 <div className='flex gap-4 max-w-xs'>
                     <span className="trophy-logo h-12 w-12 shrink-0 flex justify-center p-2.5 rounded-md">
                         <img src='./trophy.svg' alt="trophy" className="w-full h-full" />
