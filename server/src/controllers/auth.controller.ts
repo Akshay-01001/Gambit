@@ -5,6 +5,7 @@ import { sendSuccess, sendError } from "../utils/apiResponse";
 import { generateAccessToken, generateTokenPair } from "../utils/tokens";
 import { prisma } from "../lib/prisma";
 import { verifyGoogleIdToken } from "../lib/google";
+import { uploadImageToCloudinary } from "../utils/cloudinary";
 
 export const registerUser = async (req: Request, res: Response) => {
     try {
@@ -446,6 +447,57 @@ export const generateNewAccessToken = async (req: Request, res: Response) => {
             success: true,
             message: "Token Generated Successfully"
         })
+    } catch (error) {
+        const errorMessage =
+            error instanceof Error ? error.message : "Something went wrong";
+        return sendError(res, {
+            code: "INTERNAL_ERROR",
+            message: errorMessage,
+        });
+    }
+}
+
+export const onboardUser = async (req: Request, res: Response) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) {
+            return sendError(res, {
+                code: "UNAUTHORIZED",
+                message: "Unauthorized",
+            });
+        }
+
+        const { country, username, gender } = req.body;
+        let { avatar_url } = req.body;
+
+        let data: { url: string; publicId: string | null } = {
+            url: avatar_url || '',
+            publicId: null
+        };
+
+        // If an image file was uploaded, we use uploadImageToCloudinary
+        if (req.file) {
+            data = await uploadImageToCloudinary(req.file.buffer, req.file.mimetype);
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: {
+                country,
+                username,
+                gender,
+                avatarUrl: data.url,
+                avatarPublicId: data.publicId,
+                isCompletedOnboarding: true,
+            },
+        });
+
+        return sendSuccess(res, {
+            statusCode: 200,
+            message: "Onboarding successful",
+            data: updatedUser,
+        });
+
     } catch (error) {
         const errorMessage =
             error instanceof Error ? error.message : "Something went wrong";

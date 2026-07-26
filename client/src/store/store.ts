@@ -1,11 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit'
 import chessReducer from '../features/chess.slice'
 import userReducer from '../features/user.slice'
+import onboardingReducer from '../features/onboarding.slice'
 
 export const store = configureStore({
     reducer: {
         chess: chessReducer,
-        user: userReducer
+        user: userReducer,
+        onboarding: onboardingReducer
     }
 })
 

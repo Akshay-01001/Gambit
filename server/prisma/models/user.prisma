@@ -1,10 +1,11 @@
 model User {
   id String @id @default(cuid())
 
-  username  String  @unique
-  email     String  @unique
-  avatarUrl String?
-  bio       String?
+  username       String  @unique
+  email          String  @unique
+  avatarUrl      String?
+  avatarPublicId String? @unique
+  bio            String?
 
   country String?
   gender  Gender?

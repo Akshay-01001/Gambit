@@ -17,6 +17,13 @@ export const getUserDetails = async (req: Request, res: Response) => {
             where: {
                 id: userId,
                 isDeleted: false
+            },
+            include: {
+                auth: {
+                    select: {
+                        isVerified: true
+                    }
+                },
             }
         });
 
@@ -27,10 +34,17 @@ export const getUserDetails = async (req: Request, res: Response) => {
             });
         }
 
+        const { auth, ...user } = userDetails;
+
+        const result = {
+            ...user,
+            isVerified: auth?.isVerified
+        }
+
         return sendSuccess(res, {
             statusCode: 200,
             message: "User details fetched succcessfully",
-            data: userDetails
+            data: result
         });
 
     } catch (error) {

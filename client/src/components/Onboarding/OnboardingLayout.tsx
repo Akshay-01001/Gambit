@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import '../Login/login.css'; // import the css to get .gambit-logo
+import '../../Pages/Login/login.css'
 
 interface OnboardingLayoutProps {
     children: ReactNode;

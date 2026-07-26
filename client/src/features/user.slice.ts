@@ -8,7 +8,6 @@ interface UserState {
     bio: string
     country: string
     isCompletedOnboarding: boolean
-    isAuthenticated: boolean
 }
 
 const initialState: UserState = {
@@ -18,7 +17,6 @@ const initialState: UserState = {
     gender: '',
     bio: '',
     country: '',
-    isAuthenticated: false,
     isCompletedOnboarding: false
 }
 

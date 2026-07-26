@@ -1,11 +1,11 @@
 import "./App.css";
-import { Home } from "./components/Home/Home.js";
-import Login from "./components/Login/Login";
+import { Home } from "./Pages/Home/Home";
+import Login from "./Pages/Login/Login";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import OnboardingPage from "./components/Onboarding/OnboardingPage.js";
-import ProtectedRoute from "./components/ProtectedRoute.js";
-import RequireOnboardingRoute from "./components/RequireOnboardingRoute.js";
-import { AuthProvider } from "./contexts/AuthContext.js";
+import OnboardingPage from "./Pages/Onboarding/OnboardingPage";
+import ProtectedRoute from "./components/Routes/ProtectedRoute";
+import RequireOnboardingRoute from "./components/Routes/OnboardingRoute";
+import { AuthProvider } from "./contexts/AuthContext";
 
 const router = createBrowserRouter([
     {

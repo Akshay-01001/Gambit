@@ -1,8 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import './Home.css';
+import { useAuth } from '../../hooks/useAuth';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../store/store';
 
 export const Home = () => {
     const navigate = useNavigate();
+    const auth = useAuth();
+    const { user } = useSelector((state: RootState) => state)
 
     const handleLoginButtonClick = () => {
         navigate("/login")
@@ -25,12 +30,21 @@ export const Home = () => {
                 </div>
 
                 {/* Right: Auth Buttons */}
-                <div className="flex items-center justify-end gap-4 md:gap-6">
-                    <button className="px-4 py-1.5 md:px-5 md:py-2 rounded-md font-bold transition-opacity hover:opacity-90 home-btn-primary" onClick={handleLoginButtonClick}>Login</button>
-                </div>
+                { (!auth.isLoggedIn && !auth.isLoading) &&
+                    <div className="flex items-center justify-end gap-4 md:gap-6">
+                        <button className="px-4 py-1.5 md:px-5 md:py-2 rounded-md font-bold transition-opacity hover:opacity-90 home-btn-primary" onClick={handleLoginButtonClick}>Login</button>
+                    </div>
+                }
+                {
+                    auth.isLoggedIn &&
+                    <div className="flex items-center gap-3 text-sm cursor-pointer">
+                        <img src={user.avatarUrl} className='h-8 w-8 rounded-full' alt="" />
+                        <span>{user.username}</span>
+                    </div>
+                }
             </div>
 
-            <div className="header flex items-center min-h-[500px] md:h-[610px] px-6 md:px-10">
+            <div className="header flex items-center min-h-125 md:h-152.5 px-6 md:px-10">
                 <div className="max-w-7xl w-full mx-auto pb-12 md:pb-0">
                     <div className="pill px-3 rounded-full py-1.5 flex items-center gap-2 w-fit text-xs md:text-sm font-medium shadow-sm">
                         <span className="h-2 w-2 rounded-full home-pill-icon"></span>

@@ -4,15 +4,86 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google"
 import axios from 'axios';
 import { useAuth } from '../../hooks/useAuth';
+import { API_BASE_URL } from '../../utils/constants';
 
 const Login = () => {
     const [isLogin, setIsLogin] = useState(true);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
     const navigate = useNavigate();
     const { isLoggedIn } = useAuth();
+
+    const baseUrl = API_BASE_URL || 'http://localhost:8000';
 
     const handleLogoClick = () => {
         navigate("/");
     }
+
+    const redirectAfterAuth = () => {
+        window.location.replace('/');
+    };
+
+    const handleGoogleSuccess = async (credentialResponse: { credential?: string | null }) => {
+        if (!credentialResponse.credential) {
+            setErrorMessage('Google login failed. Please try again.');
+            return;
+        }
+
+        setIsSubmitting(true);
+        setErrorMessage('');
+
+        try {
+            await axios.post(
+                `${baseUrl}/api/auth/google`,
+                { idToken: credentialResponse.credential },
+                { withCredentials: true }
+            );
+
+            redirectAfterAuth();
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                setErrorMessage(error.response?.data?.message || 'Google login failed. Please try again.');
+            } else {
+                setErrorMessage('Google login failed. Please try again.');
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleEmailSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        if (!email.trim() || !password.trim()) {
+            setErrorMessage('Please enter both email and password.');
+            return;
+        }
+
+        setIsSubmitting(true);
+        setErrorMessage('');
+
+        try {
+            const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+
+            await axios.post(
+                `${baseUrl}${endpoint}`,
+                { email: email.trim(), password },
+                { withCredentials: true }
+            );
+
+            redirectAfterAuth();
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                setErrorMessage(error.response?.data?.message || 'Authentication failed. Please try again.');
+            } else {
+                setErrorMessage('Authentication failed. Please try again.');
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     if (isLoggedIn) {
         return <Navigate to={"/"} />
@@ -80,17 +151,9 @@ const Login = () => {
 
                     <GoogleOAuthProvider clientId='664700514063-n59iij2qkg3tq7ep1590omtvklfh5kr3.apps.googleusercontent.com'>
                         <GoogleLogin
-                            onSuccess={async (credentialResponse) => {
-                                console.log(credentialResponse);
-                                await axios.post("http://localhost:8000/api/auth/google", {
-                                    idToken: credentialResponse.credential
-                                }, {
-                                    withCredentials: true
-                                })
-                            }}
-
-                        >
-                        </GoogleLogin>
+                            onSuccess={handleGoogleSuccess}
+                            onError={() => setErrorMessage('Google login failed. Please try again.')}
+                        />
                     </GoogleOAuthProvider>
 
                     <div className="flex items-center w-full">
@@ -99,11 +162,20 @@ const Login = () => {
                         <div className="grow border-t divider"></div>
                     </div>
 
-                    <form className='flex flex-col gap-4' onSubmit={(e) => e.preventDefault()}>
+                    {errorMessage && (
+                        <div className='rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600'>
+                            {errorMessage}
+                        </div>
+                    )}
+
+                    <form className='flex flex-col gap-4' onSubmit={handleEmailSubmit}>
                         <div className='flex flex-col gap-2'>
                             <label className='text-sm font-medium input-label'>Email</label>
                             <input
                                 type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                autoComplete="email"
                                 className='input-field w-full border rounded-xl px-4 py-2.5 focus:outline-none transition-colors text-sm'
                             />
                         </div>
@@ -111,12 +183,19 @@ const Login = () => {
                             <label className='text-sm font-medium input-label'>Password</label>
                             <input
                                 type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                autoComplete={isLogin ? 'current-password' : 'new-password'}
                                 className='input-field w-full border rounded-xl px-4 py-2.5 focus:outline-none transition-colors text-sm'
                             />
                         </div>
 
-                        <button className='login-button w-full font-semibold rounded-xl py-2.5 mt-4 hover:opacity-90 transition-opacity cursor-pointer'>
-                            {isLogin ? 'Log in' : 'Sign up'}
+                        <button
+                            type='submit'
+                            disabled={isSubmitting}
+                            className='login-button w-full font-semibold rounded-xl py-2.5 mt-4 hover:opacity-90 transition-opacity cursor-pointer disabled:cursor-not-allowed disabled:opacity-70'
+                        >
+                            {isSubmitting ? 'Please wait...' : isLogin ? 'Log in' : 'Sign up'}
                         </button>
                     </form>
                 </div>
