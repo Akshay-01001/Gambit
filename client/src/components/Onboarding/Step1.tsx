@@ -6,15 +6,27 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../../store/store';
 import type React from 'react';
 import { setCurrentStep, setFormData, type FormState } from '../../features/onboarding.slice';
+import { useState } from 'react';
 
-const Page1 = () => {
+const Step1 = () => {
     const { isOnboarded } = useAuth();
     const dispatch = useDispatch();
     const { formData, currentStep } = useSelector((state: RootState) => state.onboarding);
+    const [error, setError] = useState<Record<string, string>>({
+        username: '',
+        country: ''
+    })
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const name = e.target.name as keyof FormState["formData"];
-        const value = e.target.value;
+        const value = e.target.value?.trim();
+
+        if (error[name as keyof typeof error]) {
+            setError((prev) => ({
+                ...prev,
+                [name]: ''
+            }))
+        }
 
         dispatch(
             setFormData({
@@ -23,8 +35,24 @@ const Page1 = () => {
         );
     };
 
+    const handleValidate = () => {
+        const error: Record<string, string> = {}
+        if (!formData.username) {
+            error.username = 'Username is required'
+        } 
+        if (!formData.country) {
+            error.country = 'Country is required'
+        }
+        setError(error);
+        return error;
+    }
+
     const handleNextClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation()
+        const errors = handleValidate();
+        if (Object.values(errors).some((err)=> Boolean(err))) {
+            return;
+        }
         dispatch(setCurrentStep(currentStep + 1));
     }
 
@@ -52,21 +80,35 @@ const Page1 = () => {
                             className='flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm'
                         />
                         <p className='mt-1 text-xs text-muted-foreground'>3–20 chars · letters, numbers, underscores</p>
+                        {
+                            error.username && 
+                            <div className='text-sm text-red-500'>{error.username}</div>
+                        }
                     </div>
                     <div className='flex flex-col space-y-2'>
                         <label htmlFor="country">Country</label>
                         <CountrySelect value={formData.country} onChange={(value: string) => {
+                            if (error['country']) {
+                                setError((prev) => ({
+                                    ...prev,
+                                    country: ''
+                                }))
+                            }
                             dispatch(setFormData({
                                 'country': value
                             }));
                         }} />
+                        {
+                            error.country && 
+                            <div className='text-sm text-red-500'>{error.country}</div>
+                        }
                     </div>
                 </form>
             </div>
             <div className='mt-8'>
                 <button
                     type="button"
-                    className="w-full bg-primary text-primary-foreground h-10 px-4 py-2 rounded-md font-medium transition-colors hover:bg-primary/90"
+                    className="w-full bg-primary text-primary-foreground h-10 px-4 py-2 rounded-md font-medium transition-colors hover:bg-primary/90 cursor-pointer"
                     onClick={handleNextClick}
                 >
                     Continue
@@ -76,4 +118,4 @@ const Page1 = () => {
     )
 }
 
-export default Page1;
+export default Step1;

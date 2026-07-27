@@ -1,6 +1,6 @@
 import OnboardingLayout from "./OnboardingLayout"
 
-const Page3 = () => {
+const Step3 = () => {
     return (
         <OnboardingLayout currentStep={3}>
             <div className='mt-6'>
@@ -39,4 +39,4 @@ const Page3 = () => {
     )
 }
 
-export default Page3
+export default Step3;

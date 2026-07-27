@@ -5,11 +5,13 @@ import { setFormData } from "../../features/onboarding.slice";
 import React, { useCallback, useEffect, useMemo } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../utils/constants";
+import { useNavigate } from "react-router-dom";
 
-const Page2 = () => {
+const Step2 = () => {
 
     const dispatch = useDispatch();
     const { formData } = useSelector((state: RootState) => state.onboarding)
+    const navigate = useNavigate();
     const avatar_urls = useMemo(()=> {
         return  [
             'https://res.cloudinary.com/gambit-game/image/upload/v1785072386/Knight_c2ft9j.png',
@@ -46,14 +48,15 @@ const Page2 = () => {
             data.append('country', formData.country)
             if (formData.avatar_url) {
                 data.append('avatar_url', formData.avatar_url);
-            } else if (formData.image) {
+            } 
+            if (formData.image) {
                 data.append('image', formData.image)
             }
             const response = await axios.post(`${API_BASE_URL}/api/auth/onboarding`, data, {
                 withCredentials: true
             });
-
-            console.log(response);
+            console.log(response)
+            navigate("/");
         } catch (error) {
             console.log('error', error);
         }
@@ -130,4 +133,4 @@ const Page2 = () => {
     )
 }
 
-export default Page2;
+export default Step2;
