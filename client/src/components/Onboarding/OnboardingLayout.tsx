@@ -1,8 +1,5 @@
-import { type ReactNode } from 'react';
-import '../../Pages/Login/login.css'
-
 interface OnboardingLayoutProps {
-    children: ReactNode;
+    children: React.ReactNode;
     currentStep: number;
     totalSteps?: number;
 }
@@ -14,7 +11,7 @@ const OnboardingLayout = ({ children, currentStep, totalSteps = 3 }: OnboardingL
                 {/* Logo Section */}
                 <div className='flex items-center'>
                     <div className="flex items-center cursor-pointer">
-                        <span className="gambit-logo h-10 w-10 flex justify-center items-center rounded-lg">
+                        <span className="bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] h-10 w-10 flex justify-center items-center rounded-lg">
                             <img src='/logo.svg' alt="logo" className="h-6 w-6" />
                         </span>
                         <span className="font-bold text-xl ml-3 tracking-wide">Gambit</span>

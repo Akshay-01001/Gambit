@@ -1,8 +1,7 @@
-import axios from 'axios';
 import React, { createContext, useEffect, useState } from 'react'
-import { API_BASE_URL } from '../utils/constants';
 import { useDispatch } from 'react-redux';
-import { setUser } from '../features/user.slice'
+import { setUser, type UserState } from '../features/user.slice'
+import { getUserDetails } from '../utils/apiFunctions';
 
 const AuthContext = createContext({
     isLoading: true,
@@ -20,41 +19,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const fetUserDetails = async () => {
         setIsLoading(true);
         try {
-            const res = await axios.get(`${API_BASE_URL}/api/auth/me`, {
-                withCredentials: true
-            });
+            const res = await getUserDetails<UserState>('/api/auth/me');
             if (res.data.success) {
                 setIsLoggedIn(true);
-                setIsOnboarded(res.data.data.isCompletedOnboarding);
-                dispatch(
-                    setUser(res.data.data)
-                )
+                setIsOnboarded(res.data?.data?.isCompletedOnboarding || false);
+                if (res.data.data) {
+                    dispatch(setUser(res.data?.data));
+                }
             }
         } catch (error) {
-            console.log(error)
-            if (axios.isAxiosError(error) && error.response?.status === 401) {
-                try {
-                    const refreshRes = await axios.get(`${API_BASE_URL}/api/auth/refresh`, {
-                        withCredentials: true
-                    });
-                    if (refreshRes.data.success) {
-                        const retryRes = await axios.get(`${API_BASE_URL}/api/auth/me`, {
-                            withCredentials: true
-                        });
-                        if (retryRes.data.success) {
-                            setIsLoggedIn(true);
-                            setIsOnboarded(retryRes.data.data.isCompletedOnboarding);
-                            dispatch(
-                                setUser(retryRes.data.data)
-                            )
-                        }
-                    }
-                } catch {
-                    setIsLoggedIn(false);
-                }
-            } else {
-                setIsLoggedIn(false);
-            }
+            console.error(error)
         } finally {
             setIsLoading(false);
         }

@@ -183,14 +183,6 @@ export const loginUser = async (req: Request, res: Response) => {
             });
         }
 
-        // 5. Check email is verified
-        if (!authRecord.isVerified) {
-            return sendError(res, {
-                code: "FORBIDDEN",
-                message: "Please verify your email before logging in",
-            });
-        }
-
         // 6. Generate token pair
         const { accessToken, refreshToken } = generateTokenPair({
             userId: authRecord.userId,
