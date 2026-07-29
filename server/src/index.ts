@@ -3,8 +3,13 @@ import { configDotenv } from "dotenv";
 import cookieParser from "cookie-parser";
 import authRoute from './routes/auth.routes';
 import cors from "cors";
+import http from "http";
+import { initializeSocket } from "./ws/socket";
 
 const app = express();
+const server = http.createServer(app);
+initializeSocket(server);
+
 configDotenv();
 
 const PORT = process.env.PORT;
@@ -24,6 +29,6 @@ app.get("/", (req: Request, res: Response) => {
 // Auth routes
 app.use("/api/auth", authRoute);
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`http://localhost:${PORT}`);
 });
