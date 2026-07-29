@@ -4,7 +4,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google"
 import axios from 'axios';
 import { useAuth } from '../../hooks/useAuth';
-import { API_BASE_URL } from '../../utils/constants';
+import { googleLogin, loginUser } from '../../utils/apiFunctions';
 
 const Login = () => {
     const [isLogin, setIsLogin] = useState(true);
@@ -13,17 +13,19 @@ const Login = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const navigate = useNavigate();
-    const { isLoggedIn } = useAuth();
-
-    const baseUrl = API_BASE_URL || 'http://localhost:8000';
+    const { isLoggedIn, isOnboarded, fetchUserDetails } = useAuth();
 
     const handleLogoClick = () => {
         navigate("/");
     }
 
-    const redirectAfterAuth = () => {
-        window.location.replace('/');
-    };
+    const handlePostLogin = async () => {
+        try {
+            await fetchUserDetails();
+        } catch (error) {
+            console.error('Error fetching user details:', error);
+        }
+    }
 
     const handleGoogleSuccess = async (credentialResponse: { credential?: string | null }) => {
         if (!credentialResponse.credential) {
@@ -35,13 +37,16 @@ const Login = () => {
         setErrorMessage('');
 
         try {
-            await axios.post(
-                `${baseUrl}/api/auth/google`,
-                { idToken: credentialResponse.credential },
-                { withCredentials: true }
-            );
 
-            redirectAfterAuth();
+            const payload = {
+                idToken: credentialResponse.credential
+            }
+            const response = await googleLogin('/api/auth/google', payload);
+
+            if (response.data.success) {
+                await handlePostLogin();
+            }
+
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 setErrorMessage(error.response?.data?.message || 'Google login failed. Please try again.');
@@ -61,19 +66,28 @@ const Login = () => {
             return;
         }
 
+        if (!isLogin) {
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{6,14}$/;
+            if (!passwordRegex.test(password)) {
+                setErrorMessage('Password must be 6-14 characters long, contain at least one uppercase, one lowercase, and one special character.');
+                return;
+            }
+        }
+
         setIsSubmitting(true);
         setErrorMessage('');
 
         try {
             const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+            const payload = {
+                email,
+                password
+            }
 
-            await axios.post(
-                `${baseUrl}${endpoint}`,
-                { email: email.trim(), password },
-                { withCredentials: true }
-            );
-
-            redirectAfterAuth();
+            const response = await loginUser(endpoint, payload);
+            if (response.data.success) {
+                await handlePostLogin();
+            }
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 setErrorMessage(error.response?.data?.message || 'Authentication failed. Please try again.');
@@ -86,7 +100,7 @@ const Login = () => {
     };
 
     if (isLoggedIn) {
-        return <Navigate to={"/"} />
+        return <Navigate to={isOnboarded ? "/" : "/onboarding"} />
     }
 
     return (

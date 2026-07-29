@@ -3,10 +3,18 @@ import { useDispatch } from 'react-redux';
 import { setUser, type UserState } from '../features/user.slice'
 import { getUserDetails } from '../utils/apiFunctions';
 
-const AuthContext = createContext({
+type AuthContextType = {
+    isLoading: boolean;
+    isLoggedIn: boolean;
+    isOnboarded: boolean;
+    fetchUserDetails: () => Promise<void>;
+};
+
+const AuthContext = createContext<AuthContextType>({
     isLoading: true,
     isLoggedIn: false,
-    isOnboarded: false
+    isOnboarded: false,
+    fetchUserDetails: async () => {}
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -16,7 +24,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [isOnboarded, setIsOnboarded] = useState(false);
     const dispatch = useDispatch();
 
-    const fetUserDetails = async () => {
+    const fetchUserDetails = async () => {
         setIsLoading(true);
         try {
             const res = await getUserDetails<UserState>('/api/auth/me');
@@ -36,7 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     useEffect(() => {
         const timeOutId = setTimeout(() => {
-            fetUserDetails();
+            fetchUserDetails();
         }, 0);
 
         return () => {
@@ -45,7 +53,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ isLoading, isLoggedIn, isOnboarded }}>
+        <AuthContext.Provider value={{ isLoading, isLoggedIn, isOnboarded, fetchUserDetails }}>
             {children}
         </AuthContext.Provider>
     )
