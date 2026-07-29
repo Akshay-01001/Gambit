@@ -8,11 +8,7 @@ const RequireOnboardingRoute = () => {
         return <div className="h-screen w-screen flex justify-center items-center text-lg">Loading....</div>;
     }
 
-    if (!isLoggedIn) {
-        return <Navigate to="/login" replace />;
-    }
-
-    if (!isOnboarded) {
+    if (isLoggedIn && !isOnboarded) {
         return <Navigate to="/onboarding" replace />;
     }
 
