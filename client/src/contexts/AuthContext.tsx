@@ -14,7 +14,7 @@ const AuthContext = createContext<AuthContextType>({
     isLoading: true,
     isLoggedIn: false,
     isOnboarded: false,
-    fetchUserDetails: async () => {}
+    fetchUserDetails: async () => { }
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -52,8 +52,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         };
     }, []);
 
+    const value = {
+        isLoading,
+        isLoggedIn,
+        isOnboarded,
+        fetchUserDetails
+    }
+
     return (
-        <AuthContext.Provider value={{ isLoading, isLoggedIn, isOnboarded, fetchUserDetails }}>
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     )

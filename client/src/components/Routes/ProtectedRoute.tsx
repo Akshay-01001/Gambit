@@ -5,7 +5,7 @@ const ProtectedRoute = () => {
     const { isLoading, isLoggedIn } = useAuth();
 
     if (isLoading) {
-        return <div>
+        return <div className="h-screen w-screen flex justify-center items-center text-lg">
             Loading....
         </div>
     }

@@ -5,7 +5,7 @@ const RequireOnboardingRoute = () => {
     const { isLoading, isLoggedIn, isOnboarded } = useAuth();
 
     if (isLoading) {
-        return <div>Loading....</div>;
+        return <div className="h-screen w-screen flex justify-center items-center text-lg">Loading....</div>;
     }
 
     if (!isLoggedIn) {
