@@ -8,13 +8,15 @@ type AuthContextType = {
     isLoggedIn: boolean;
     isOnboarded: boolean;
     fetchUserDetails: () => Promise<void>;
+    setIsLoggedIn: (value: boolean) => void
 };
 
 const AuthContext = createContext<AuthContextType>({
     isLoading: true,
     isLoggedIn: false,
     isOnboarded: false,
-    fetchUserDetails: async () => { }
+    fetchUserDetails: async () => { },
+    setIsLoggedIn: () => { }
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -56,7 +58,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isLoading,
         isLoggedIn,
         isOnboarded,
-        fetchUserDetails
+        fetchUserDetails,
+        setIsLoggedIn
     }
 
     return (

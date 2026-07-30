@@ -6,6 +6,7 @@ import { generateAccessToken, generateTokenPair } from "../utils/tokens";
 import { prisma } from "../lib/prisma";
 import { verifyGoogleIdToken } from "../lib/google";
 import { uploadImageToCloudinary } from "../utils/cloudinary";
+import { accessTokenCookieOptions, refreshTokenCookieOptions } from "../lib/constants";
 
 export const registerUser = async (req: Request, res: Response) => {
     try {
@@ -85,21 +86,8 @@ export const registerUser = async (req: Request, res: Response) => {
         });
 
         // 7. Set tokens as HttpOnly cookies
-        const isProduction = process.env.NODE_ENV === "production";
-
-        res.cookie("accessToken", accessToken, {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: "strict",
-            maxAge: 30 * 60 * 1000, // 30 minutes
-        });
-
-        res.cookie("refreshToken", refreshToken, {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: "strict",
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        });
+        res.cookie("accessToken", accessToken, accessTokenCookieOptions);
+        res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
 
         // 8. Return success
         return sendSuccess(res, {
@@ -203,21 +191,8 @@ export const loginUser = async (req: Request, res: Response) => {
         });
 
         // 8. Set HttpOnly cookies
-        const isProduction = process.env.NODE_ENV === "production";
-
-        res.cookie("accessToken", accessToken, {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: "strict",
-            maxAge: 30 * 60 * 1000, // 30 minutes
-        });
-
-        res.cookie("refreshToken", refreshToken, {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: "strict",
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        });
+        res.cookie("accessToken", accessToken, accessTokenCookieOptions);
+        res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
 
         // 9. Return success
         return sendSuccess(res, {
@@ -295,19 +270,8 @@ export const googleLogin = async (req: Request, res: Response) => {
                 }
             });
 
-            res.cookie("accessToken", accessToken, {
-                httpOnly: true,
-                secure: isProduction,
-                sameSite: "strict",
-                maxAge: 30 * 60 * 1000, // 30 minutes
-            });
-
-            res.cookie("refreshToken", refreshToken, {
-                httpOnly: true,
-                secure: isProduction,
-                sameSite: "strict",
-                maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-            });
+            res.cookie("accessToken", accessToken, accessTokenCookieOptions);
+            res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
 
             return res.status(200).json({
                 success: true,
@@ -360,19 +324,8 @@ export const googleLogin = async (req: Request, res: Response) => {
             }
         });
 
-        res.cookie("accessToken", accessToken, {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: "strict",
-            maxAge: 30 * 60 * 1000, // 30 minutes
-        });
-
-        res.cookie("refreshToken", refreshToken, {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: "strict",
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        });
+        res.cookie("accessToken", accessToken, accessTokenCookieOptions);
+        res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
 
         return res.status(200).json({
             success: true,
@@ -426,12 +379,7 @@ export const generateNewAccessToken = async (req: Request, res: Response) => {
         const accessToken = await generateAccessToken(tokenPayload);
         const isProduction = process.env.NODE_ENV === "production";
 
-        res.cookie("accessToken", accessToken, {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: "strict",
-            maxAge: 30 * 60 * 1000, // 30 minutes
-        });
+        res.cookie("accessToken", accessToken, accessTokenCookieOptions);
 
         return res.status(200).json({
             success: true,
@@ -495,5 +443,45 @@ export const onboardUser = async (req: Request, res: Response) => {
             code: "INTERNAL_ERROR",
             message: errorMessage,
         });
+    }
+}
+
+export const logout = async (req: Request, res: Response) => {
+    try {
+        const userId = req.user?.id;
+
+        if (!userId) {
+            return sendError(res, {
+                code: "UNAUTHORIZED",
+                message: "Unauthorized",
+            });
+        }
+
+        const refreshToken = req.cookies?.["refreshToken"]
+
+        if (refreshToken) {
+            await prisma.refreshToken.delete({
+                where: {
+                    token: refreshToken,
+                    userId
+                }
+            });
+        }
+
+        res.clearCookie("accessToken", accessTokenCookieOptions);
+        res.clearCookie("refreshToken", refreshTokenCookieOptions);
+
+        return sendSuccess(res, {
+            statusCode: 200,
+            message: "Logout success !!"
+        });
+
+    } catch (error) {
+        const errorMessage =
+            error instanceof Error ? error.message : "Something went wrong";
+        return sendError(res, {
+            code: "INTERNAL_ERROR",
+            message: errorMessage
+        })
     }
 }

@@ -14,13 +14,13 @@ const api = axios.create({
 });
 
 let isRefreshing = false;
-let refreshPromise:  Promise<void> | null = null;
+let refreshPromise: Promise<void> | null = null;
 
 api.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
         const originalRequest = error?.config as RetryConfig
-        if (error?.response?.status !== 401 || originalRequest.url === '/api/auth/refresh'){
+        if (error?.response?.status !== 401 || originalRequest.url === '/api/auth/refresh') {
             return Promise.reject(error);
         }
 
@@ -33,14 +33,14 @@ api.interceptors.response.use(
         if (!isRefreshing) {
             isRefreshing = true;
             refreshPromise = api.get('/api/auth/refresh')
-            .then(()=> {})
-            .catch((err) => {
-                throw err;
-            })
-            .finally(()=> {
-                isRefreshing = false;
-                refreshPromise = null;
-            })
+                .then(() => { })
+                .catch((err) => {
+                    throw err;
+                })
+                .finally(() => {
+                    isRefreshing = false;
+                    refreshPromise = null;
+                })
         }
 
         await refreshPromise;
