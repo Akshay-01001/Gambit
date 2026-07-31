@@ -4,7 +4,7 @@ interface OnboardingLayoutProps {
     totalSteps?: number;
 }
 
-const OnboardingLayout = ({ children, currentStep, totalSteps = 3 }: OnboardingLayoutProps) => {
+const OnboardingLayout = ({ children, currentStep, totalSteps = 2 }: OnboardingLayoutProps) => {
     return (
         <div className='min-h-screen w-screen bg-background flex justify-center items-start px-6 py-10'>
             <div className='w-full max-w-2xl px-6 flex flex-col'>
