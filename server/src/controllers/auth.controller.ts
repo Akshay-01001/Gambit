@@ -408,8 +408,13 @@ export const onboardUser = async (req: Request, res: Response) => {
         const { country, username, gender } = req.body;
         let { avatar_url } = req.body;
 
+        let parsedAvatarUrl = avatar_url;
+        if (parsedAvatarUrl === 'undefined' || parsedAvatarUrl === 'null' || !parsedAvatarUrl) {
+            parsedAvatarUrl = '';
+        }
+
         let data: { url: string; publicId: string | null } = {
-            url: avatar_url || '',
+            url: parsedAvatarUrl,
             publicId: null
         };
 

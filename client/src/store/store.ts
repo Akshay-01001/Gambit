@@ -1,12 +1,10 @@
 import { combineReducers, configureStore, type PayloadAction } from '@reduxjs/toolkit'
 import chessReducer from '../features/chess.slice'
 import userReducer from '../features/user.slice'
-import onboardingReducer from '../features/onboarding.slice'
 
 export const appReducer = combineReducers({
     chess: chessReducer,
-    user: userReducer,
-    onboarding: onboardingReducer
+    user: userReducer
 });
 
 const rootReducer = (state: ReturnType<typeof appReducer> | undefined, action: PayloadAction) => {

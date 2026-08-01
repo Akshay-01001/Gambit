@@ -2,58 +2,19 @@ import CountrySelect from './CountrySelect'
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import OnboardingLayout from './OnboardingLayout';
-import { useDispatch, useSelector } from 'react-redux';
-import type { RootState } from '../../store/store';
 import type React from 'react';
-import { setCurrentStep, setFormData, type FormState } from '../../features/onboarding.slice';
-import { useState } from 'react';
+import { useOnboarding } from '../../hooks/useOnboarding';
 
 const Step1 = () => {
     const { isOnboarded } = useAuth();
-    const dispatch = useDispatch();
-    const { formData, currentStep } = useSelector((state: RootState) => state.onboarding);
-    const [error, setError] = useState<Record<string, string>>({
-        username: '',
-        country: ''
-    })
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const name = e.target.name as keyof FormState["formData"];
-        const value = e.target.value?.trim();
-
-        if (error[name as keyof typeof error]) {
-            setError((prev) => ({
-                ...prev,
-                [name]: ''
-            }))
-        }
-
-        dispatch(
-            setFormData({
-                [name]: value,
-            })
-        );
-    };
-
-    const handleValidate = () => {
-        const error: Record<string, string> = {}
-        if (!formData.username) {
-            error.username = 'Username is required'
-        } 
-        if (!formData.country) {
-            error.country = 'Country is required'
-        }
-        setError(error);
-        return error;
-    }
+    const { formData, handleChange, currentStep, setCurrentStep, errors, validateStep1 } = useOnboarding();
 
     const handleNextClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation()
-        const errors = handleValidate();
-        if (Object.values(errors).some((err)=> Boolean(err))) {
+        if (!validateStep1()) {
             return;
         }
-        dispatch(setCurrentStep(currentStep + 1));
+        setCurrentStep(currentStep + 1);
     }
 
     if (isOnboarded) {
@@ -81,26 +42,38 @@ const Step1 = () => {
                         />
                         <p className='mt-1 text-xs text-muted-foreground'>3–20 chars · letters, numbers, underscores</p>
                         {
-                            error.username && 
-                            <div className='text-sm text-red-500'>{error.username}</div>
+                            errors.username &&
+                            <div className='text-sm text-red-500'>{errors.username}</div>
                         }
                     </div>
                     <div className='flex flex-col space-y-2'>
                         <label htmlFor="country">Country</label>
-                        <CountrySelect value={formData.country} onChange={(value: string) => {
-                            if (error['country']) {
-                                setError((prev) => ({
-                                    ...prev,
-                                    country: ''
-                                }))
-                            }
-                            dispatch(setFormData({
-                                'country': value
-                            }));
-                        }} />
+                        <CountrySelect value={formData.country} onChange={(value: string) => handleChange({ target: { name: 'country', value } })} />
                         {
-                            error.country && 
-                            <div className='text-sm text-red-500'>{error.country}</div>
+                            errors.country &&
+                            <div className='text-sm text-red-500'>{errors.country}</div>
+                        }
+                    </div>
+                    <div className='flex flex-col space-y-3'>
+                        <label>Gender</label>
+                        <div className='flex items-center gap-6'>
+                            {['MALE', 'FEMALE', 'OTHER'].map((g) => (
+                                <label key={g} className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="gender"
+                                        value={g}
+                                        checked={formData.gender === g}
+                                        onChange={handleChange}
+                                        className="h-4 w-4 border-input bg-transparent text-primary focus-visible:ring-1 focus-visible:ring-ring accent-primary"
+                                    />
+                                    <span className="text-sm font-medium leading-none">{g.charAt(0) + g.slice(1).toLowerCase()}</span>
+                                </label>
+                            ))}
+                        </div>
+                        {
+                            errors.gender &&
+                            <div className='text-sm text-red-500'>{errors.gender}</div>
                         }
                     </div>
                 </form>

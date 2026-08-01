@@ -6,6 +6,7 @@ import OnboardingPage from "./Pages/Onboarding/OnboardingPage";
 import ProtectedRoute from "./components/Routes/ProtectedRoute";
 import RequireOnboardingRoute from "./components/Routes/OnboardingRoute";
 import { AuthProvider } from "./contexts/AuthContext";
+import { OnboardingProvider } from "./contexts/OnboardingContext";
 
 const router = createBrowserRouter([
     {
@@ -35,7 +36,9 @@ const router = createBrowserRouter([
 function App() {
     return (
         <AuthProvider>
-            <RouterProvider router={router} />
+            <OnboardingProvider>
+                <RouterProvider router={router} />
+            </OnboardingProvider>
         </AuthProvider>
     )
 }

@@ -1,62 +1,63 @@
-import { useDispatch, useSelector } from "react-redux"
 import OnboardingLayout from "./OnboardingLayout"
-import type { RootState } from "../../store/store";
-import { setFormData } from "../../features/onboarding.slice";
-import React, { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../utils/constants";
 import { useNavigate } from "react-router-dom";
+import { useOnboarding } from "../../hooks/useOnboarding";
+import { useAuth } from "../../hooks/useAuth";
 
 const Step2 = () => {
 
-    const dispatch = useDispatch();
-    const { formData } = useSelector((state: RootState) => state.onboarding)
     const navigate = useNavigate();
-    const avatar_urls = useMemo(()=> {
-        return  [
+    const { formData, setFormData, errors, validateAll, handleFileChange, setErrors } = useOnboarding();
+    const { fetchUserDetails } = useAuth();
+    const avatar_urls = useMemo(() => {
+        return [
             'https://res.cloudinary.com/gambit-game/image/upload/v1785072386/Knight_c2ft9j.png',
             'https://res.cloudinary.com/gambit-game/image/upload/v1785072388/Rook_ofu8lt.png',
             'https://res.cloudinary.com/gambit-game/image/upload/v1785072387/Bishop_oui0ix.png',
             'https://res.cloudinary.com/gambit-game/image/upload/v1785072389/Pawn_nu4ui2.png'
         ]
-    },[]);
+    }, []);
 
     const handleSelectDefaultAvatars = useCallback((url: string) => {
-        dispatch(setFormData({
-            avatar_url: url
-        }));
-    },[dispatch]);
-
-    const handleSelectCustomImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-
-        if (!file) {
-            return;
+        if (errors.avatar_url) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors.avatar_url;
+                return newErrors;
+            });
         }
-
-        const url = URL.createObjectURL(file);
-        dispatch(setFormData({
-            image: file,
-            avatar_url: url
-        }));
-    }
+        setFormData((prev) => {
+            return {
+                ...prev,
+                avatar_url: url
+            }
+        })
+    }, [errors.avatar_url, setErrors, setFormData]);
 
     const handleSubmit = async () => {
+        if (!validateAll()) {
+            return;
+        }
         try {
             const data = new FormData();
             data.append('username', formData.username)
             data.append('country', formData.country)
-            if (formData.avatar_url) {
+            data.append('gender', formData.gender)
+            if (formData.avatar_url && formData.avatar_url.startsWith('http')) {
                 data.append('avatar_url', formData.avatar_url);
-            } 
+            }
             if (formData.image) {
                 data.append('image', formData.image)
             }
             const response = await axios.post(`${API_BASE_URL}/api/auth/onboarding`, data, {
                 withCredentials: true
             });
-            console.log(response)
-            navigate("/");
+            if (response.data.success) {
+                await fetchUserDetails();
+                navigate("/");
+            }
         } catch (error) {
             console.log('error', error);
         }
@@ -119,8 +120,12 @@ const Step2 = () => {
                                 </svg>
                             </div>
                         </label>
-                        <input type="file" name="avatar" hidden id="avatar" accept="image/*" onChange={(e) => handleSelectCustomImage(e)} />
+                        <input type="file" name="image" hidden id="avatar" accept="image/*" onChange={handleFileChange} />
                     </div>
+                    {
+                        errors.avatar_url &&
+                        <div className='text-sm text-red-500 mt-2'>{errors.avatar_url}</div>
+                    }
                     <p className="text-xs text-muted-foreground">Or upload your own image</p>
                 </div>
             </div>
