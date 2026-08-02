@@ -2,7 +2,8 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 
 const RequireOnboardingRoute = () => {
-    const { isLoading, isLoggedIn, isOnboarded } = useAuth();
+    const { isLoading, isLoggedIn, isOnboarded, isEmailVerified } = useAuth();
+    console.log(isEmailVerified)
 
     if (isLoading) {
         return <div className="h-screen w-screen flex justify-center items-center text-lg">Loading....</div>;
@@ -12,7 +13,14 @@ const RequireOnboardingRoute = () => {
         return <Navigate to="/onboarding" replace />;
     }
 
-    return <Outlet />;
+    if (isLoggedIn && !isEmailVerified) {
+        return <Navigate to={"/verify-otp"} replace />
+    }
+
+    if (isLoggedIn) {
+        return <Outlet />;
+    }
+
 };
 
 export default RequireOnboardingRoute;

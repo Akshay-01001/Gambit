@@ -230,7 +230,6 @@ export const googleLogin = async (req: Request, res: Response) => {
         }
 
         const userDetails = await verifyGoogleIdToken(idToken);
-        const isProduction = process.env.NODE_ENV === "production";
 
         const existUser = await prisma.auth.findFirst({
             where: {
@@ -377,7 +376,6 @@ export const generateNewAccessToken = async (req: Request, res: Response) => {
         }
 
         const accessToken = await generateAccessToken(tokenPayload);
-        const isProduction = process.env.NODE_ENV === "production";
 
         res.cookie("accessToken", accessToken, accessTokenCookieOptions);
 
@@ -418,6 +416,19 @@ export const onboardUser = async (req: Request, res: Response) => {
             publicId: null
         };
 
+        const existUsername = await prisma.user.findFirst({
+            where: {
+                username
+            }
+        });
+
+        if (existUsername) {
+            return sendError(res, {
+                statusCode: 400,
+                message: "Username Already Taken"
+            })
+        }
+
         // If an image file was uploaded, we use uploadImageToCloudinary
         if (req.file) {
             data = await uploadImageToCloudinary(req.file.buffer, req.file.mimetype);
@@ -444,6 +455,7 @@ export const onboardUser = async (req: Request, res: Response) => {
     } catch (error) {
         const errorMessage =
             error instanceof Error ? error.message : "Something went wrong";
+        console.log(error)
         return sendError(res, {
             code: "INTERNAL_ERROR",
             message: errorMessage,

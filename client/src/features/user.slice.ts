@@ -8,6 +8,7 @@ export interface UserState {
     bio: string
     country: string
     isCompletedOnboarding: boolean
+    isVerified: boolean
 }
 
 const initialState: UserState = {
@@ -17,7 +18,8 @@ const initialState: UserState = {
     gender: '',
     bio: '',
     country: '',
-    isCompletedOnboarding: false
+    isCompletedOnboarding: false,
+    isVerified: false
 }
 
 export const userSlice = createSlice({

@@ -7,6 +7,7 @@ import ProtectedRoute from "./components/Routes/ProtectedRoute";
 import RequireOnboardingRoute from "./components/Routes/OnboardingRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 import { OnboardingProvider } from "./contexts/OnboardingContext";
+import VerifyOtp from "./components/Onboarding/VerifyOtp";
 
 const router = createBrowserRouter([
     {
@@ -29,6 +30,10 @@ const router = createBrowserRouter([
                 path: "/onboarding",
                 element: <OnboardingPage />
             },
+            {
+                path: '/verify-otp',
+                element: <VerifyOtp />
+            }
         ]
     }
 ]);
