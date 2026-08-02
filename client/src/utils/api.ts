@@ -13,6 +13,8 @@ const api = axios.create({
     }
 });
 
+const excluded_requests = ['/api/auth/login', '/api/auth/register', '/api/auth/refresh']
+
 let isRefreshing = false;
 let refreshPromise: Promise<void> | null = null;
 
@@ -20,7 +22,7 @@ api.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
         const originalRequest = error?.config as RetryConfig
-        if (error?.response?.status !== 401 || originalRequest.url === '/api/auth/refresh') {
+        if (error?.response?.status !== 401 || excluded_requests.includes(originalRequest.url)) {
             return Promise.reject(error);
         }
 

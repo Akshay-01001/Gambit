@@ -1,15 +1,58 @@
 import React, { useRef, useState, useEffect } from "react";
+import { sendOtpMail, verifyOtp } from "../../utils/apiFunctions";
+import { useSelector, useDispatch } from "react-redux";
+import type { RootState } from "../../store/store";
+import { setUser } from "../../features/user.slice";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 
 const VerifyOtp = () => {
     const OTP_LENGTH = 6;
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
     const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
+    const { email } = useSelector((state: RootState) => state.user)
+    const hasSentOtp = useRef<boolean>(false);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const { setIsEmailVerified } = useAuth()
 
     useEffect(() => {
         if (inputRefs.current[0]) {
             inputRefs.current[0].focus();
         }
     }, []);
+
+    const sendMail = async () => {
+        hasSentOtp.current = true;
+        try {
+            await sendOtpMail('/api/otp/send-otp', { email });
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    useEffect(() => {
+        if (!hasSentOtp.current) {
+            sendMail()
+        }
+    }, []);
+
+    const handleVerify = async () => {
+        const otpString = otp.join("");
+        if (otpString.length !== OTP_LENGTH) return;
+
+        try {
+            const response = await verifyOtp('/api/otp/verify-otp', { email, otp: otpString });
+            if (response.data.success) {
+                setIsEmailVerified(true);
+                dispatch(setUser({ isVerified: true }));
+                navigate("/");
+            }
+        } catch (error) {
+            console.error("Verification failed", error);
+            // Optionally set some error state here to show to the user
+        }
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
         const value = e.target.value.replace(/\D/g, "");
@@ -119,7 +162,11 @@ const VerifyOtp = () => {
                     </p>
                 </div>
                 <div className='mt-8'>
-                    <button type="button" className="w-full bg-primary text-primary-foreground h-10 px-4 py-2 rounded-md font-medium transition-colors hover:bg-primary/90 cursor-pointer">
+                    <button
+                        onClick={handleVerify}
+                        type="button"
+                        disabled={otp.join("").length !== OTP_LENGTH}
+                        className="w-full bg-primary text-primary-foreground h-10 px-4 py-2 rounded-md font-medium transition-colors hover:bg-primary/90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                         Verify Email
                     </button>
                 </div>

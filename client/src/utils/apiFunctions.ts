@@ -26,3 +26,11 @@ export const registerUser = <T>(url: string, data: object): Promise<AxiosRespons
 export const logout = <T>(url: string): Promise<AxiosResponse<ApiResponse<T>>> => {
 	return api.get(url);
 }
+
+export const sendOtpMail = <T>(url: string, data: object): Promise<AxiosResponse<ApiResponse<T>>> => {
+	return api.post(url, data);
+}
+
+export const verifyOtp = <T>(url: string, data: object): Promise<AxiosResponse<ApiResponse<T>>> => {
+	return api.post(url, data);
+}
