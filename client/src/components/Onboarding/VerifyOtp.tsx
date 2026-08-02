@@ -5,6 +5,7 @@ import type { RootState } from "../../store/store";
 import { setUser } from "../../features/user.slice";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import CountDown from "react-countdown"
 
 const VerifyOtp = () => {
     const OTP_LENGTH = 6;
@@ -14,7 +15,8 @@ const VerifyOtp = () => {
     const hasSentOtp = useRef<boolean>(false);
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { setIsEmailVerified } = useAuth()
+    const { setIsEmailVerified } = useAuth();
+    const [timeLeft, setTimeLeft] = useState(0);
 
     useEffect(() => {
         if (inputRefs.current[0]) {
@@ -22,10 +24,37 @@ const VerifyOtp = () => {
         }
     }, []);
 
+    useEffect(() => {
+        const updateTimer = () => {
+            const expiresAt = Number(localStorage.getItem("otpExpiresAt"));
+
+            if (!expiresAt) {
+                setTimeLeft(0);
+                return;
+            }
+
+            const remaining = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+            setTimeLeft(remaining);
+
+            if (remaining === 0) {
+                localStorage.removeItem("otpExpiresAt");
+            }
+        };
+
+        updateTimer();
+        const timerId = setInterval(updateTimer, 1000);
+
+        return () => {
+            clearInterval(timerId);
+        };
+    }, []);
+
     const sendMail = async () => {
         hasSentOtp.current = true;
         try {
             await sendOtpMail('/api/otp/send-otp', { email });
+            localStorage.setItem("otpExpiresAt", String(Date.now() + 3 * 60 * 1000)); // 3 minutes
+            setTimeLeft(180);
         } catch (error) {
             console.error(error);
         }
@@ -158,7 +187,16 @@ const VerifyOtp = () => {
                         }
                     </div>
                     <p className='text-sm text-muted-foreground'>
-                        Didn't receive the code? <span className='text-primary'>Resend</span>
+                        Didn't receive the code?{' '}
+                        {timeLeft > 0 ? (
+                            <span className='text-primary font-medium'>
+                                {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                            </span>
+                        ) : (
+                            <span onClick={sendMail} className='text-primary cursor-pointer hover:underline font-medium'>
+                                Resend
+                            </span>
+                        )}
                     </p>
                 </div>
                 <div className='mt-8'>
