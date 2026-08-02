@@ -16,7 +16,6 @@ const VerifyOtp = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { setIsEmailVerified } = useAuth();
-    const [timeLeft, setTimeLeft] = useState(0);
 
     useEffect(() => {
         if (inputRefs.current[0]) {
@@ -24,37 +23,26 @@ const VerifyOtp = () => {
         }
     }, []);
 
-    useEffect(() => {
-        const updateTimer = () => {
-            const expiresAt = Number(localStorage.getItem("otpExpiresAt"));
+    const getInitialDate = () => {
+        const expiresAt = Number(localStorage.getItem("otpExpiresAt"));
+        if (expiresAt && expiresAt > Date.now()) {
+            return expiresAt;
+        }
+        if (expiresAt) {
+            localStorage.removeItem("otpExpiresAt");
+        }
+        return 0;
+    };
 
-            if (!expiresAt) {
-                setTimeLeft(0);
-                return;
-            }
-
-            const remaining = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
-            setTimeLeft(remaining);
-
-            if (remaining === 0) {
-                localStorage.removeItem("otpExpiresAt");
-            }
-        };
-
-        updateTimer();
-        const timerId = setInterval(updateTimer, 1000);
-
-        return () => {
-            clearInterval(timerId);
-        };
-    }, []);
+    const [targetDate, setTargetDate] = useState<number>(getInitialDate());
 
     const sendMail = async () => {
         hasSentOtp.current = true;
         try {
             await sendOtpMail('/api/otp/send-otp', { email });
-            localStorage.setItem("otpExpiresAt", String(Date.now() + 3 * 60 * 1000)); // 3 minutes
-            setTimeLeft(180);
+            const newExpiry = Date.now() + 3 * 60 * 1000; // 3 minutes
+            localStorage.setItem("otpExpiresAt", String(newExpiry));
+            setTargetDate(newExpiry);
         } catch (error) {
             console.error(error);
         }
@@ -188,9 +176,19 @@ const VerifyOtp = () => {
                     </div>
                     <p className='text-sm text-muted-foreground'>
                         Didn't receive the code?{' '}
-                        {timeLeft > 0 ? (
+                        {targetDate > Date.now() ? (
                             <span className='text-primary font-medium'>
-                                {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                                <CountDown
+                                    date={targetDate}
+                                    onComplete={() => {
+                                        localStorage.removeItem("otpExpiresAt");
+                                        setTargetDate(0);
+                                    }}
+                                    renderer={({ minutes, seconds, completed }) => {
+                                        if (completed) return null;
+                                        return <span>{minutes}:{seconds.toString().padStart(2, '0')}</span>;
+                                    }}
+                                />
                             </span>
                         ) : (
                             <span onClick={sendMail} className='text-primary cursor-pointer hover:underline font-medium'>
