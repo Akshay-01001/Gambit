@@ -1,111 +1,135 @@
-import { createSlice } from '@reduxjs/toolkit';
-import { Chess } from 'chess.js';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { Square } from 'chess.js';
-import type { SquarePiece } from '../types/inex';
+
+export type GameStatus = "waiting" | "playing" | "check" | "checkmate" | "stalemate"
+    | "draw" | "resigned" | "timeout" | "abandone"
+
+export type GameResult = "1-0" | "0-1" | "1/2 - 1/2" | null
 
 export interface ChessState {
-    game_status: 'active' | 'checkmate' | 'stalemate' | 'draw' | 'threefold_repetition' | 'insufficient_material';
-    fen: string,
-    board: SquarePiece[],
-    legalMoves: Square[],
-    selectedSquare: SquarePiece | null,
-    turn: 'w' | 'b',
-    winner: 'w' | 'b' | null,
-    isCheck: boolean
-    isGameOver: boolean
+    gameId: string | null
+    fen: string
+    turn: "b" | "w"
+    selectedSquare: Square | null
+    legalMoves: string[]
+    lastMove: {
+        from: Square,
+        to: Square,
+    } | null
+    status: string
+    winner: "b" | "w"
+    result: GameResult
+    players: {
+        black: {
+            username: string,
+            userId: string,
+            rating: string,
+            country: string
+        } | null,
+        white: {
+            username: string,
+            userId: string,
+            rating: string,
+            country: string
+        } | null,
+        clock: {
+            white: string,
+            black: string
+        },
+        promotion: {
+            open: boolean,
+            from: Square,
+            to: Square
+        },
+    }
+    gameOverModalOpen: boolean
 }
 
 const initialState: ChessState = {
-    game_status: 'active',
-    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-    board: new Chess().board().flat(),
-    legalMoves: [],
+    gameId: null,
+    fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+    turn: "w",
     selectedSquare: null,
-    turn: 'w',
+    legalMoves: [],
+    lastMove: null,
+    status: "",
     winner: null,
-    isCheck: false,
-    isGameOver: false
-}
-
-function deriveStatus(chess: Chess) {
-    let game_status: ChessState['game_status'] = 'active';
-    let winner: ChessState['winner'] = null;
-
-    if (chess.isCheckmate()) {
-        game_status = 'checkmate';
-        winner = chess.turn() === 'w' ? 'b' : 'w';
-    } else if (chess.isStalemate()) {
-        game_status = 'stalemate';
-    } else if (chess.isThreefoldRepetition()) {
-        game_status = 'threefold_repetition';
-    } else if (chess.isInsufficientMaterial()) {
-        game_status = 'insufficient_material';
-    } else if (chess.isDraw()) {
-        game_status = 'draw';
-    }
-
-    return {
-        game_status,
-        winner,
-        isCheck: chess.isCheck(),
-    };
+    result: null,
+    players: {
+        black: null,
+        white: null,
+        clock: {
+            white: "",
+            black: ""
+        },
+        promotion: {
+            open: false,
+            from: null,
+            to: null
+        },
+    },
+    gameOverModalOpen: false
 }
 
 export const chessSlice = createSlice({
     name: 'chess',
     initialState,
     reducers: {
-        resetGame() {
-            return initialState;
+        setFen(state, action: PayloadAction<string>) {
+            state.fen = action.payload;
         },
-        selectSquare(state, action: { payload: SquarePiece | null }) {
-            const selectedSquare = action.payload;
-
-            if (!selectedSquare) {
-                state.selectedSquare = null;
-                state.legalMoves = [];
-                return;
-            }
-
-            const chess = new Chess(state.fen);
-
-            if (!state.selectedSquare || state.selectedSquare.square !== selectedSquare.square) {
-                state.selectedSquare = selectedSquare;
-                state.legalMoves = chess.moves({
-                    square: selectedSquare.square,
-                    verbose: true
-                }).map((m) => m.to);
-            } else {
-                state.selectedSquare = null;
-                state.legalMoves = [];
-            }
+        setSelectedSquare(state, action: PayloadAction<Square>) {
+            state.selectedSquare = action.payload;
         },
-        makeMove(state, action: { payload: Square }) {
-            const move = action.payload;
-            const chess = new Chess(state.fen);
-            chess.move({
-                from: state.selectedSquare.square,
-                to: move,
-                promotion: 'q'
-            });
-            state.fen = chess.fen();
-            state.board = chess.board().flat()
-            state.legalMoves = []
+        clearSelectedSquare(state) {
             state.selectedSquare = null;
-            if (state.turn === 'w') {
-                state.turn = 'b'
-            } else {
-                state.turn = 'w'
+        },
+        setLegalMoves(state, action: PayloadAction<string[]>) {
+            state.legalMoves = action.payload;
+        },
+        setLastMove(state, action: PayloadAction<{ from: Square, to: Square }>) {
+            state.lastMove = action.payload;
+        },
+        clearLastMove(state) {
+            state.lastMove = null;
+        },
+        setStatus(state, action: PayloadAction<GameStatus>) {
+            state.status = action.payload;
+        },
+        setWinner(state, action: PayloadAction<"b" | "w">) {
+            state.winner = action.payload;
+        },
+        setResult(state, action: PayloadAction<GameResult>) {
+            state.result = action.payload;
+        },
+        setGameOverModa(state, acion: PayloadAction<boolean>) {
+            state.gameOverModalOpen = acion.payload;
+        },
+        setTurn(state, acion: PayloadAction<"b" | "w">) {
+            state.turn = acion.payload;
+        },
+        setGame(state, acion: PayloadAction<Partial<ChessState>>) {
+            return {
+                ...state,
+                ...acion.payload
             }
-
-            const { game_status, isCheck, winner } = deriveStatus(chess);
-            state.winner = winner;
-            state.game_status = game_status;
-            state.isCheck = isCheck;
-            state.isGameOver = chess.isGameOver()
         }
     }
 });
 
-export const { resetGame, selectSquare, makeMove } = chessSlice.actions;
+export const {
+    setFen,
+    setGame,
+    setGameOverModa,
+    setLastMove,
+    setLegalMoves,
+    setResult,
+    setSelectedSquare,
+    setStatus,
+    setWinner,
+    clearLastMove,
+    clearSelectedSquare,
+    setTurn
+} = chessSlice.actions;
+
 export default chessSlice.reducer;

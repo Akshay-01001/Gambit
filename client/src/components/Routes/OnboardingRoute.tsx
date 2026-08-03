@@ -3,7 +3,6 @@ import { useAuth } from "../../hooks/useAuth";
 
 const RequireOnboardingRoute = () => {
     const { isLoading, isLoggedIn, isOnboarded, isEmailVerified } = useAuth();
-    console.log(isEmailVerified)
 
     if (isLoading) {
         return <div className="h-screen w-screen flex justify-center items-center text-lg">Loading....</div>;

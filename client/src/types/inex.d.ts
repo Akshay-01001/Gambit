@@ -4,5 +4,4 @@ interface SquarePiece {
     type: PieceSymbol,
     square: Square,
     color: Color
-
 }

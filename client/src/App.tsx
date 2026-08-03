@@ -8,6 +8,7 @@ import RequireOnboardingRoute from "./components/Routes/OnboardingRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 import { OnboardingProvider } from "./contexts/OnboardingContext";
 import VerifyOtp from "./components/Onboarding/VerifyOtp";
+import Board from "./components/Game/Board";
 
 const router = createBrowserRouter([
     {
@@ -21,6 +22,10 @@ const router = createBrowserRouter([
                 path: "/",
                 element: <Home />,
             },
+            {
+                path: "/game",
+                element: <Board />
+            }
         ]
     },
     {
