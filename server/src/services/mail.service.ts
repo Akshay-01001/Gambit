@@ -14,7 +14,7 @@ export const sendOtpMail = async (email: string, otp: string) => {
     try {
         const transporter = getTransporter();
         await transporter.sendMail({
-            from: process.env.SMTP_EMAIL || "akshaypatel0789@gmail.com",
+            from: process.env.SMTP_EMAIL,
             to: email,
             text: `Yout Otp is : ${otp}`
         });
