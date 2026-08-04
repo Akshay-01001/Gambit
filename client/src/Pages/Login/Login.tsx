@@ -163,7 +163,7 @@ const Login = () => {
                         </button>
                     </div>
 
-                    <GoogleOAuthProvider clientId='664700514063-n59iij2qkg3tq7ep1590omtvklfh5kr3.apps.googleusercontent.com'>
+                    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
                         <GoogleLogin
                             onSuccess={handleGoogleSuccess}
                             onError={() => setErrorMessage('Google login failed. Please try again.')}
