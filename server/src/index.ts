@@ -4,7 +4,7 @@ import express, { Request, Response } from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import http from "http";
-import { initializeSocket } from "./ws/socket";
+import { initializeSocket } from "./socket/socket";
 import authRoute from './routes/auth.routes';
 import otpRoute from './routes/otp.route';
 
@@ -18,8 +18,8 @@ app.use(cookieParser());
 app.use(express.json());
 
 app.use(cors({
-    origin: "http://localhost:5173", // Your React/Vite frontend
-    credentials: true, // Allow cookies
+    origin: process.env.CLIENT_URL,
+    credentials: true
 }))
 
 app.get("/", (req: Request, res: Response) => {

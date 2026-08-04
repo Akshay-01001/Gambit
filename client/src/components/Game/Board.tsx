@@ -1,13 +1,12 @@
 import { useDispatch, useSelector } from "react-redux"
 import Navbar from "../../Pages/Home/Navbar"
 import type { RootState } from "../../store/store"
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { Chess, type Square } from "chess.js";
 import { PIECES_MAP_BLACK, PIECES_MAP_WHITE } from "../../utils/constants";
-import { setFen, setLastMove, setLegalMoves, setSelectedSquare, setTurn } from "../../features/chess.slice";
-
+import { setFen, setGameOverModal, setLastMove, setLegalMoves, setResult, setSelectedSquare, setStatus, setTurn, setWinner } from "../../features/chess.slice";
 const Board = () => {
-    const { fen, legalMoves, selectedSquare } = useSelector((state: RootState) => state.chess);
+    const { fen, legalMoves, selectedSquare, result } = useSelector((state: RootState) => state.chess);
     const dispatch = useDispatch();
 
     const chess = useMemo(() => {
@@ -27,7 +26,36 @@ const Board = () => {
         );
     };
 
+    const handeCheckGame = () => {
+        if (chess.isCheckmate()) {
+            const winner = chess.turn() === "b" ? "w" : "b";
+            dispatch(setStatus("checkmate"));
+            dispatch(setWinner(winner));
+            dispatch(setGameOverModal(true));
+            dispatch(setResult(winner === "b" ? "0-1" : "1-0"));
+        } else if (chess.isStalemate()) {
+            dispatch(setStatus("stalemate"));
+            dispatch(setGameOverModal(true));
+            dispatch(setResult("1/2 - 1/2"));
+        } else if (chess.isThreefoldRepetition() || chess.isInsufficientMaterial() || chess.isDraw()) {
+            dispatch(setStatus("draw"));
+            dispatch(setGameOverModal(true));
+            dispatch(setResult("1/2 - 1/2"));
+        } else if (chess.isCheck()) {
+            dispatch(setStatus("check"));
+        } else {
+            dispatch(setStatus("playing"));
+        }
+    };
+
+    useEffect(() => {
+        handeCheckGame();
+    }, [chess]);
+
     const handleSelectSquare = (square: Square) => {
+        if (result !== null) {
+            return;
+        }
         const clickedPiece = chess.get(square);
 
         if (!selectedSquare) {
@@ -43,7 +71,6 @@ const Board = () => {
         }
 
         if (!legalMoves.includes(square)) {
-            console.log("NOT A LEGAL MOVE")
             return;
         }
 
@@ -67,7 +94,7 @@ const Board = () => {
     return (
         <div className="h-screen w-screen overflow-y-auto">
             <Navbar />
-            <div className="flex justify-center items-center mt-8 pb-12 px-4">
+            <div className="flex flex-col justify-center items-center mt-8 pb-12 px-4">
                 <div className="grid grid-cols-8 grid-rows-8 w-full max-w-160 aspect-square border-4 border-[#333] shadow-2xl">
                     {
                         chess.board().flat().map((b, index) => {

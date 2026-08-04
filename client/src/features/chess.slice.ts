@@ -102,7 +102,7 @@ export const chessSlice = createSlice({
         setResult(state, action: PayloadAction<GameResult>) {
             state.result = action.payload;
         },
-        setGameOverModa(state, acion: PayloadAction<boolean>) {
+        setGameOverModal(state, acion: PayloadAction<boolean>) {
             state.gameOverModalOpen = acion.payload;
         },
         setTurn(state, acion: PayloadAction<"b" | "w">) {
@@ -120,7 +120,7 @@ export const chessSlice = createSlice({
 export const {
     setFen,
     setGame,
-    setGameOverModa,
+    setGameOverModal,
     setLastMove,
     setLegalMoves,
     setResult,
