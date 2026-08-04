@@ -13,12 +13,12 @@ model ChessProfile {
   totalWhiteWins Int @default(0)
   totalBlackWins Int @default(0)
 
-  blitzRating     Int @default(1200)
-  rapidRating     Int @default(1200)
-  classicalRating Int @default(1200)
-  bulletRating    Int @default(1200)
+  blitzRating     Int @default(100)
+  rapidRating     Int @default(100)
+  classicalRating Int @default(100)
+  bulletRating    Int @default(100)
 
-  highestRating Int @default(1200)
+  highestRating Int @default(100)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

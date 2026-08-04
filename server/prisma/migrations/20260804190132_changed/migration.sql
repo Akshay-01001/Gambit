@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "ChessProfile" ALTER COLUMN "blitzRating" SET DEFAULT 100,
+ALTER COLUMN "rapidRating" SET DEFAULT 100,
+ALTER COLUMN "classicalRating" SET DEFAULT 100,
+ALTER COLUMN "bulletRating" SET DEFAULT 100,
+ALTER COLUMN "highestRating" SET DEFAULT 100;
