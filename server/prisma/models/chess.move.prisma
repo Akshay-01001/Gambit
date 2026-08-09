@@ -1,0 +1,18 @@
+model Move {
+    id          String  @id @default(cuid())
+    gameId      String
+    game        Game    @relation(fields: [gameId], references: [id], onDelete: Cascade)
+    chessGameId String?
+
+    moveNumber Int
+    from       String
+    to         String
+    san        String
+    fen        String
+    promotion  String
+
+    whiteTimeLeft Int?
+    blackTimeLeft Int?
+
+    createdAt DateTime @default(now())
+}

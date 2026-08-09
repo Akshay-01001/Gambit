@@ -8,7 +8,7 @@ import { verifyGoogleIdToken } from "../lib/google";
 import { uploadImageToCloudinary } from "../utils/cloudinary";
 import { accessTokenCookieOptions, refreshTokenCookieOptions } from "../lib/constants";
 
-export const registerUser = async (req: Request, res: Response) => {
+const registerUser = async (req: Request, res: Response) => {
     try {
         // 1. Validate request body
         const { error, value } = registerSchema.validate(req.body);
@@ -113,7 +113,7 @@ export const registerUser = async (req: Request, res: Response) => {
 };
 
 
-export const loginUser = async (req: Request, res: Response) => {
+const loginUser = async (req: Request, res: Response) => {
     try {
         // 1. Validate with loginSchema (not registerSchema)
         const { error, value } = loginSchema.validate(req.body);
@@ -218,7 +218,7 @@ export const loginUser = async (req: Request, res: Response) => {
     }
 };
 
-export const googleLogin = async (req: Request, res: Response) => {
+const googleLogin = async (req: Request, res: Response) => {
     try {
         const { idToken } = req.body;
 
@@ -347,7 +347,7 @@ export const googleLogin = async (req: Request, res: Response) => {
     }
 };
 
-export const generateNewAccessToken = async (req: Request, res: Response) => {
+const generateNewAccessToken = async (req: Request, res: Response) => {
     try {
         const userId = req.user?.id;
 
@@ -393,7 +393,7 @@ export const generateNewAccessToken = async (req: Request, res: Response) => {
     }
 }
 
-export const onboardUser = async (req: Request, res: Response) => {
+const onboardUser = async (req: Request, res: Response) => {
     try {
         const userId = req.user?.id;
         if (!userId) {
@@ -429,21 +429,33 @@ export const onboardUser = async (req: Request, res: Response) => {
             })
         }
 
-        // If an image file was uploaded, we use uploadImageToCloudinary
         if (req.file) {
             data = await uploadImageToCloudinary(req.file.buffer, req.file.mimetype);
         }
 
-        const updatedUser = await prisma.user.update({
-            where: { id: userId },
-            data: {
-                country,
-                username,
-                gender,
-                avatarUrl: data.url,
-                avatarPublicId: data.publicId,
-                isCompletedOnboarding: true,
-            },
+        const { updatedUser } = await prisma.$transaction(async (txn) => {
+            const updatedUser = await txn.user.update({
+                where: { id: userId },
+                data: {
+                    country,
+                    username,
+                    gender,
+                    avatarUrl: data.url,
+                    avatarPublicId: data.publicId,
+                    isCompletedOnboarding: true,
+                },
+            });
+
+            const chessProfile = await txn.chessProfile.create({
+                data: {
+                    userId: updatedUser.id
+                }
+            });
+
+            return {
+                updatedUser,
+                chessProfile
+            };
         });
 
         return sendSuccess(res, {
@@ -463,7 +475,7 @@ export const onboardUser = async (req: Request, res: Response) => {
     }
 }
 
-export const logout = async (req: Request, res: Response) => {
+const logout = async (req: Request, res: Response) => {
     try {
         const userId = req.user?.id;
 
@@ -502,3 +514,12 @@ export const logout = async (req: Request, res: Response) => {
         })
     }
 }
+
+
+export {
+    registerUser,
+    loginUser,
+    googleLogin,
+    generateNewAccessToken,
+    onboardUser, logout
+};

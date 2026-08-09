@@ -96,3 +96,20 @@ export const validateOtpSchema = Joi.object({
             "any.required": "Purpose is required",
         })
 });
+
+export const createGameSchema = Joi.object({
+    player_id: Joi.string().optional(),
+    piece_color: Joi.string().valid("white", "black", "random").required().messages({
+        "any.only": "Piece color must be white, black, or random",
+        "any.required": "Piece color is required"
+    }),
+    game_type: Joi.string().valid("BULLET", "BLITZ", "RAPID", "CLASSICAL").required().messages({
+        "any.only": "Game type must be BULLET, BLITZ, RAPID, or CLASSICAL",
+        "any.required": "Game type is required"
+    }),
+    game_time: Joi.number().integer().positive().required().messages({
+        "number.base": "Game time must be a number",
+        "number.positive": "Game time must be a positive number",
+        "any.required": "Game time is required"
+    })
+});

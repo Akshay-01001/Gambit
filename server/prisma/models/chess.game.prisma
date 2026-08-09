@@ -1,0 +1,56 @@
+enum GameType {
+    BULLET
+    BLITZ
+    RAPID
+    CLASSICAL
+}
+
+enum GameStatus {
+    WAITING
+    PLAYING
+    COMPLETED
+    ABANDONED
+}
+
+enum GameResult {
+    WHITE_WIN
+    BLACK_WIN
+    DRAW
+}
+
+enum GameEndReason {
+    CHECKMATE
+    STALEMATE
+    RESIGNATION
+    TIMEOUT
+    DRAW_AGREEMENT
+    INSUFFICIENT_MATERIAL
+    THREEFOLD_REPETITION
+    FIFTY_MOVE_RULE
+    ABANDONMENT
+}
+
+model Game {
+    id            String  @id @default(cuid())
+    whitePlayerId String?
+    blackPlayerId String?
+    whitePlayer   User?   @relation("WhiteGames", fields: [whitePlayerId], references: [id])
+    blackPlayer   User?   @relation("BlackGames", fields: [blackPlayerId], references: [id])
+
+    gameType  GameType
+    status    GameStatus
+    result    GameResult?
+    endReason GameEndReason?
+
+    timeControl   Int
+    whiteTimeLeft Int
+    blackTimeLeft Int
+
+    fen       String @default("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+    pgn       String @default("")
+    moveCount Int    @default(0)
+
+    move      Move[]
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}

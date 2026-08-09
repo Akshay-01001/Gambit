@@ -3,7 +3,7 @@ import { prisma } from "../lib/prisma";
 import { sendOtpMail } from "../services/mail.service";
 import { sendError, sendSuccess } from "../utils/apiResponse";
 
-export const sendOtp = async (req: Request, res: Response) => {
+const sendOtp = async (req: Request, res: Response) => {
     try {
         const { email } = req.body;
 
@@ -79,7 +79,7 @@ export const sendOtp = async (req: Request, res: Response) => {
     }
 };
 
-export const verifyOtp = async (req: Request, res: Response) => {
+const verifyOtp = async (req: Request, res: Response) => {
     try {
         const { email, otp } = req.body;
 
@@ -126,3 +126,9 @@ export const verifyOtp = async (req: Request, res: Response) => {
         });
     }
 }
+
+
+export {
+    sendOtp,
+    verifyOtp
+};

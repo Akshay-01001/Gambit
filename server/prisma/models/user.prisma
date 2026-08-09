@@ -20,4 +20,6 @@ model User {
   chessProfile ChessProfile?
 
   refreshTokens RefreshToken[]
+  whiteGames    Game[]         @relation("WhiteGames")
+  blackGames    Game[]         @relation("BlackGames")
 }

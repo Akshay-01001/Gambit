@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { sendError, sendSuccess } from "../utils/apiResponse";
 import { prisma } from "../lib/prisma";
 
-export const getUserDetails = async (req: Request, res: Response) => {
+const getUserDetails = async (req: Request, res: Response) => {
     try {
         const userId = req.user?.id;
 
@@ -24,6 +24,13 @@ export const getUserDetails = async (req: Request, res: Response) => {
                         isVerified: true
                     }
                 },
+                chessProfile: true,
+                _count: {
+                    select: {
+                        whiteGames: true,
+                        blackGames: true
+                    }
+                }
             }
         });
 
@@ -34,10 +41,12 @@ export const getUserDetails = async (req: Request, res: Response) => {
             });
         }
 
-        const { auth, ...user } = userDetails;
+        const { auth, _count, ...user } = userDetails;
 
         const result = {
             ...user,
+            totalWhiteGames: _count.whiteGames,
+            totalBlackGames: _count.blackGames,
             isVerified: auth?.isVerified
         }
 
@@ -55,4 +64,8 @@ export const getUserDetails = async (req: Request, res: Response) => {
             message: errorMessage,
         });
     }
+};
+
+export {
+    getUserDetails
 };
