@@ -1,6 +1,14 @@
-import { io } from "socket.io-client";
+export const ws = new WebSocket(import.meta.env.VITE_WS_SERVER_URL);
 
-export const socket = io(import.meta.env.VITE_SERVER_BASE_URL, {
-    autoConnect: true,
-    withCredentials: true
+ws.onerror = ((err) => {
+    console.log(err);
 });
+
+ws.onclose = (event) => {
+    console.log(event.code);
+    console.log(event.reason);
+};
+
+ws.onmessage = (event) => {
+    console.log(event.data);
+}

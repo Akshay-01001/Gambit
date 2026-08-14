@@ -125,6 +125,7 @@ const loginUser = async (req: Request, res: Response) => {
             });
         }
 
+        console.log(value)
         const { email, password } = value;
 
         // 2. Find Auth record + join User (Auth has the password, User has email/isDeleted)
@@ -446,8 +447,10 @@ const onboardUser = async (req: Request, res: Response) => {
                 },
             });
 
-            const chessProfile = await txn.chessProfile.create({
-                data: {
+            const chessProfile = await txn.chessProfile.upsert({
+                where: { userId: updatedUser.id },
+                update: {},
+                create: {
                     userId: updatedUser.id
                 }
             });
@@ -521,5 +524,6 @@ export {
     loginUser,
     googleLogin,
     generateNewAccessToken,
-    onboardUser, logout
+    onboardUser,
+    logout
 };

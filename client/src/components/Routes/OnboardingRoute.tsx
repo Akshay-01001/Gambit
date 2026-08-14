@@ -16,10 +16,8 @@ const RequireOnboardingRoute = () => {
         return <Navigate to={"/verify-otp"} replace />
     }
 
-    if (isLoggedIn) {
-        return <Outlet />;
-    }
-
+    // Allow access if fully onboarded, OR if completely logged out (so they can browse the home page)
+    return <Outlet />;
 };
 
 export default RequireOnboardingRoute;

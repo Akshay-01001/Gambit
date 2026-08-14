@@ -2,7 +2,7 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { Square } from 'chess.js';
 
 export type GameStatus = "waiting" | "playing" | "check" | "checkmate" | "stalemate"
-    | "draw" | "resigned" | "timeout" | "abandone"
+    | "draw" | "resigned" | "timeout" | "abandone" | null
 
 export type GameResult = "1-0" | "0-1" | "1/2 - 1/2" | null
 
@@ -16,7 +16,7 @@ export interface ChessState {
         from: Square,
         to: Square,
     } | null
-    status: string
+    status: GameStatus
     winner: "b" | "w"
     result: GameResult
     players: {
@@ -38,8 +38,9 @@ export interface ChessState {
         },
         promotion: {
             open: boolean,
-            from: Square,
-            to: Square
+            from: Square | null,
+            to: Square | null,
+            color: "b" | "w" | null
         },
     }
     gameOverModalOpen: boolean
@@ -52,7 +53,7 @@ const initialState: ChessState = {
     selectedSquare: null,
     legalMoves: [],
     lastMove: null,
-    status: "",
+    status: null,
     winner: null,
     result: null,
     players: {
@@ -65,7 +66,8 @@ const initialState: ChessState = {
         promotion: {
             open: false,
             from: null,
-            to: null
+            to: null,
+            color: null
         },
     },
     gameOverModalOpen: false
@@ -108,6 +110,22 @@ export const chessSlice = createSlice({
         setTurn(state, acion: PayloadAction<"b" | "w">) {
             state.turn = acion.payload;
         },
+        setPromotion(state, action: PayloadAction<{ from: Square; to: Square; color: "b" | "w" }>) {
+            state.players.promotion = {
+                open: true,
+                from: action.payload.from,
+                to: action.payload.to,
+                color: action.payload.color
+            };
+        },
+        clearPromotion(state) {
+            state.players.promotion = {
+                open: false,
+                from: null,
+                to: null,
+                color: null
+            };
+        },
         setGame(state, acion: PayloadAction<Partial<ChessState>>) {
             return {
                 ...state,
@@ -129,7 +147,9 @@ export const {
     setWinner,
     clearLastMove,
     clearSelectedSquare,
-    setTurn
+    setTurn,
+    setPromotion,
+    clearPromotion
 } = chessSlice.actions;
 
 export default chessSlice.reducer;

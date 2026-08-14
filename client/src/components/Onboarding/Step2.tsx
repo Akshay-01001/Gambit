@@ -42,14 +42,14 @@ const Step2 = () => {
         }
         try {
             const data = new FormData();
-            data.append('username', formData.username)
-            data.append('country', formData.country)
-            data.append('gender', formData.gender)
+            data.append('username', formData.username || "");
+            data.append('country', formData.country || "");
+            data.append('gender', formData.gender || "");
             if (formData.avatar_url && formData.avatar_url.startsWith('http')) {
                 data.append('avatar_url', formData.avatar_url);
             }
             if (formData.image) {
-                data.append('image', formData.image)
+                data.append('image', formData.image);
             }
             const response = await axios.post(`${API_BASE_URL}/api/auth/onboarding`, data, {
                 withCredentials: true
