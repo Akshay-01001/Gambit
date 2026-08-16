@@ -1,4 +1,5 @@
 import { Square } from "chess.js"
+import { AuthenticatedWebSocket } from "../socket/socket"
 
 export type GameStatus = "waiting" | "playing" | "check" | "checkmate" | "stalemate"
     | "draw" | "resigned" | "timeout" | "abandone"
@@ -42,4 +43,30 @@ export interface ChessState {
             color: "b" | "w" | null
         }
     }
+}
+
+export interface Player {
+    playerId: string
+    gameId: string | null
+    socketId: string | null
+    disconnectedAt?: number | null
+    ws: AuthenticatedWebSocket
+}
+
+export interface Game {
+
+}
+
+export interface IGameManager {
+    addPlayer: (playerId: string, socketId: string, ws: any) => void
+    removePlayerConnection: (playerId: string) => void
+    addToWaiting: (playerId: string) => void
+    removeFromWaiting: (playerId: string) => void
+    findMatch: (playerId: string) => void
+    createGame: (player1Id: string, player2Id: string) => void
+    getGame: (gameId: string) => void
+    getPlayerGame: (playerId: string) => void
+    reconnectPlayer: (playerId: string, socketId: string) => void
+    makeMove: (playerId: string, from: string, to: string) => void
+    endGame: (gameId: string) => void
 }

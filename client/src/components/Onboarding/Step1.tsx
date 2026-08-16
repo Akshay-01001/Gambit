@@ -9,7 +9,8 @@ const Step1 = () => {
     const { isOnboarded } = useAuth();
     const { formData, handleChange, currentStep, setCurrentStep, errors, validateStep1 } = useOnboarding();
 
-    const handleNextClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleNextClick = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
         e.stopPropagation()
         if (!validateStep1()) {
             return;
@@ -28,7 +29,7 @@ const Step1 = () => {
                 <p className='mt-2 text-sm text-muted-foreground'>Pick a username and your country. This shows up next to your rating.</p>
             </div>
             <div className='mt-10'>
-                <form action="" className='space-y-6'>
+                <form onSubmit={handleNextClick} className='space-y-6'>
                     <div className='flex flex-col space-y-2'>
                         <label htmlFor="username">Username</label>
                         <input
@@ -76,16 +77,15 @@ const Step1 = () => {
                             <div className='text-sm text-red-500'>{errors.gender}</div>
                         }
                     </div>
+                    <div className='mt-8'>
+                        <button
+                            type="submit"
+                            className="w-full bg-primary text-primary-foreground h-10 px-4 py-2 rounded-md font-medium transition-colors hover:bg-primary/90 cursor-pointer"
+                        >
+                            Continue
+                        </button>
+                    </div>
                 </form>
-            </div>
-            <div className='mt-8'>
-                <button
-                    type="button"
-                    className="w-full bg-primary text-primary-foreground h-10 px-4 py-2 rounded-md font-medium transition-colors hover:bg-primary/90 cursor-pointer"
-                    onClick={handleNextClick}
-                >
-                    Continue
-                </button>
             </div>
         </OnboardingLayout>
     )

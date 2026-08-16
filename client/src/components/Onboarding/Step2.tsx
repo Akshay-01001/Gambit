@@ -1,5 +1,5 @@
 import OnboardingLayout from "./OnboardingLayout"
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../utils/constants";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +9,7 @@ import { useAuth } from "../../hooks/useAuth";
 const Step2 = () => {
 
     const navigate = useNavigate();
-    const { formData, setFormData, errors, validateAll, handleFileChange, setErrors } = useOnboarding();
+    const { formData, setFormData, errors, validateAll, handleFileChange, setErrors, } = useOnboarding();
     const { fetchUserDetails } = useAuth();
     const avatar_urls = useMemo(() => {
         return [
@@ -19,6 +19,7 @@ const Step2 = () => {
             'https://res.cloudinary.com/gambit-game/image/upload/v1785072389/Pawn_nu4ui2.png'
         ]
     }, []);
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleSelectDefaultAvatars = useCallback((url: string) => {
         if (errors.avatar_url) {
@@ -36,11 +37,13 @@ const Step2 = () => {
         })
     }, [errors.avatar_url, setErrors, setFormData]);
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
         if (!validateAll()) {
             return;
         }
         try {
+            setIsLoading(true);
             const data = new FormData();
             data.append('username', formData.username || "");
             data.append('country', formData.country || "");
@@ -60,6 +63,8 @@ const Step2 = () => {
             }
         } catch (error) {
             console.log('error', error);
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -75,65 +80,67 @@ const Step2 = () => {
                 <h1 className='text-3xl font-display font-bold'>Choose your avatar</h1>
                 <p className='mt-2 text-sm text-muted-foreground'>Pick one of ours or upload your own.</p>
             </div>
-            <div className='mt-10 space-y-8'>
-                <div className='flex items-center gap-4 rounded-xl border border-border bg-card p-5'>
-                    <img src={formData.avatar_url} alt="Piece" className="h-16 w-16 transition rounded-full object-cover" />
-                    <div className='min-w-0'>
-                        <div className='truncate font-display text-lg font-semibold'>
-                            {formData.username}
-                        </div>
-                        <div className='text-xs text-muted-foreground'>
-                            {formData.country}
-                        </div>
-                    </div>
-                </div>
-                <div className='space-y-3'>
-                    <label className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'>
-                        Default Avatar
-                    </label>
-                    <div className='flex flex-wrap gap-3 mt-2'>
-                        {
-                            avatar_urls.map((url, index) => {
-                                const isSelected = url === formData.avatar_url
-                                return (
-                                    <img src={url} key={index} alt="Piece" className={`h-16 w-16 transition rounded-full cursor-pointer ${isSelected && 'ring-3 ring-primary'}`} onClick={() => handleSelectDefaultAvatars(url)} />
-                                )
-                            })
-                        }
-                        <label htmlFor="avatar">
-                            <div
-                                className="grid h-16 w-16 place-items-center rounded-full border-2 border-dashed border-border text-muted-foreground transition hover:border-primary hover:text-primary cursor-pointer"
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth={2}
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="h-5 w-5"
-                                >
-                                    <path d="M12 3v12" />
-                                    <path d="m17 8-5-5-5 5" />
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                </svg>
+            <form onSubmit={handleSubmit}>
+                <div className='mt-10 space-y-8'>
+                    <div className='flex items-center gap-4 rounded-xl border border-border bg-card p-5'>
+                        <img src={formData.avatar_url} alt="Piece" className="h-16 w-16 transition rounded-full object-cover" />
+                        <div className='min-w-0'>
+                            <div className='truncate font-display text-lg font-semibold'>
+                                {formData.username}
                             </div>
-                        </label>
-                        <input type="file" name="image" hidden id="avatar" accept="image/*" onChange={handleFileChange} />
+                            <div className='text-xs text-muted-foreground'>
+                                {formData.country}
+                            </div>
+                        </div>
                     </div>
-                    {
-                        errors.avatar_url &&
-                        <div className='text-sm text-red-500 mt-2'>{errors.avatar_url}</div>
-                    }
-                    <p className="text-xs text-muted-foreground">Or upload your own image</p>
+                    <div className='space-y-3'>
+                        <label className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'>
+                            Default Avatar
+                        </label>
+                        <div className='flex flex-wrap gap-3 mt-2'>
+                            {
+                                avatar_urls.map((url, index) => {
+                                    const isSelected = url === formData.avatar_url
+                                    return (
+                                        <img src={url} key={index} alt="Piece" className={`h-16 w-16 transition rounded-full cursor-pointer ${isSelected && 'ring-3 ring-primary'}`} onClick={() => handleSelectDefaultAvatars(url)} />
+                                    )
+                                })
+                            }
+                            <label htmlFor="avatar">
+                                <div
+                                    className="grid h-16 w-16 place-items-center rounded-full border-2 border-dashed border-border text-muted-foreground transition hover:border-primary hover:text-primary cursor-pointer"
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth={2}
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        className="h-5 w-5"
+                                    >
+                                        <path d="M12 3v12" />
+                                        <path d="m17 8-5-5-5 5" />
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                    </svg>
+                                </div>
+                            </label>
+                            <input type="file" name="image" hidden id="avatar" accept="image/*" onChange={handleFileChange} />
+                        </div>
+                        {
+                            errors.avatar_url &&
+                            <div className='text-sm text-red-500 mt-2'>{errors.avatar_url}</div>
+                        }
+                        <p className="text-xs text-muted-foreground">Or upload your own image</p>
+                    </div>
                 </div>
-            </div>
-            <div className='mt-8'>
-                <button type="button" onClick={handleSubmit} className="w-full bg-primary text-primary-foreground h-10 px-4 py-2 rounded-md font-medium transition-colors hover:bg-primary/90">
-                    Continue
-                </button>
-            </div>
+                <div className='mt-8'>
+                    <button type="submit" disabled={isLoading} className="w-full cursor-pointer bg-primary text-primary-foreground h-10 px-4 py-2 rounded-md font-medium transition-colors hover:bg-primary/90  disabled:opacity-50">
+                        Continue
+                    </button>
+                </div>
+            </form>
         </OnboardingLayout>
     )
 }

@@ -1,6 +1,8 @@
 import { Server as HttpServer, IncomingMessage } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { verifyAccessToken, TokenPayload } from "../utils/tokens";
+import { v7 as uuid } from "uuid";
+import { gameManager } from "./gameManager";
 
 export interface AuthenticatedWebSocket extends WebSocket {
     user?: TokenPayload;
@@ -25,7 +27,6 @@ export const initializeSocket = (server: HttpServer) => {
                 const accessToken = cookies.accessToken;
 
                 if (!accessToken) {
-                    console.log("Here Not have access token")
                     socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
                     socket.destroy();
                     return;
@@ -39,15 +40,16 @@ export const initializeSocket = (server: HttpServer) => {
                     wss.emit("connection", ws, req);
                 });
             } catch (error) {
-                console.log("Unauthorized WebSocket connection attempt");
                 socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
                 socket.destroy();
             }
         });
 
         wss.on("connection", (ws: AuthenticatedWebSocket) => {
-            console.log(`User ${ws.user?.userId} connected`);
-            ws.send("Hello");
+            const userId = ws.user?.userId || "";
+            const sockedId = uuid();
+            gameManager.addPlayer(userId, sockedId, ws);
+            gameManager.handleClientEvents(ws);
         });
     } catch (error) {
         console.error("Error In Initializing Socket");

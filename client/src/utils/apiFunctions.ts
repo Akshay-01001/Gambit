@@ -34,3 +34,7 @@ export const sendOtpMail = <T>(url: string, data: object): Promise<AxiosResponse
 export const verifyOtp = <T>(url: string, data: object): Promise<AxiosResponse<ApiResponse<T>>> => {
 	return api.post(url, data);
 }
+
+export const getCurrentGame = <T>(url: string): Promise<AxiosResponse> => {
+	return api.get(url);
+}

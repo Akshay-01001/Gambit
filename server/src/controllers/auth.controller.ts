@@ -125,7 +125,6 @@ const loginUser = async (req: Request, res: Response) => {
             });
         }
 
-        console.log(value)
         const { email, password } = value;
 
         // 2. Find Auth record + join User (Auth has the password, User has email/isDeleted)

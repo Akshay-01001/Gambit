@@ -6,6 +6,7 @@ import { setUser } from "../../features/user.slice";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import CountDown from "react-countdown"
+import axios from "axios";
 
 const VerifyOtp = () => {
     const OTP_LENGTH = 6;
@@ -16,6 +17,8 @@ const VerifyOtp = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { setIsEmailVerified } = useAuth();
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         if (inputRefs.current[0]) {
@@ -54,9 +57,11 @@ const VerifyOtp = () => {
         }
     }, []);
 
-    const handleVerify = async () => {
+    const handleVerify = async (e?: React.FormEvent<HTMLFormElement>) => {
+        if (e) e.preventDefault();
         const otpString = otp.join("");
         if (otpString.length !== OTP_LENGTH) return;
+        setIsLoading(true);
 
         try {
             const response = await verifyOtp('/api/otp/verify-otp', { email, otp: otpString });
@@ -67,7 +72,10 @@ const VerifyOtp = () => {
             }
         } catch (error) {
             console.error("Verification failed", error);
-            // Optionally set some error state here to show to the user
+            const errorMessage = axios.isAxiosError(error) ? error.response?.data?.message : "Something Went Wrong";
+            setError(errorMessage);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -130,6 +138,8 @@ const VerifyOtp = () => {
             newOtp[index - 1] = "";
             setOtp(newOtp);
         }
+
+        setError("");
     }
 
     return (
@@ -149,14 +159,11 @@ const VerifyOtp = () => {
                     <h1 className='mt-4 font-display text-3xl font-bold'>
                         Verify Your Email
                     </h1>
-                    <p className='mt-2 text-sm text-muted-foreground'>
-                        We sent a 6-digit code to your email. Enter it below to finish setup.
-                    </p>
                 </div>
-                <div className='mt-10 space-y-6'>
-                    <div className='flex items-center gap-4'>
-                        {
-                            Array.from({ length: 6 }, (_, index) => {
+                <form onSubmit={handleVerify}>
+                    <div className='mt-10 space-y-6'>
+                        <div className='flex items-center gap-4'>
+                            {Array.from({ length: 6 }, (_, index) => {
                                 return (
                                     <input
                                         ref={(el) => {
@@ -168,44 +175,47 @@ const VerifyOtp = () => {
                                         value={otp[index]}
                                         onKeyDown={(e) => handleKeyDown(e, index)}
                                         onChange={(e) => handleChange(e, index)}
-                                        className='h-14 w-full rounded-lg border border-border bg-card text-center font-display text-2xl font-semibold outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30'
-                                    />
-                                )
-                            })
-                        }
+                                        className='h-14 w-full rounded-lg border border-border bg-card text-center font-display text-2xl font-semibold outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30' />
+                                );
+                            })}
+                        </div>
+                        <p className='text-sm text-muted-foreground'>
+                            Didn't receive the code?{' '}
+                            {targetDate > Date.now() ? (
+                                <span className='text-primary font-medium'>
+                                    <CountDown
+                                        date={targetDate}
+                                        onComplete={() => {
+                                            localStorage.removeItem("otpExpiresAt");
+                                            setTargetDate(0);
+                                        }}
+                                        renderer={({ minutes, seconds, completed }) => {
+                                            if (completed) return null;
+                                            return <span>{minutes}:{seconds.toString().padStart(2, '0')}</span>;
+                                        }} />
+                                </span>
+                            ) : (
+                                <span onClick={sendMail} className='text-primary cursor-pointer hover:underline font-medium'>
+                                    Resend
+                                </span>
+                            )}
+                        </p>
                     </div>
-                    <p className='text-sm text-muted-foreground'>
-                        Didn't receive the code?{' '}
-                        {targetDate > Date.now() ? (
-                            <span className='text-primary font-medium'>
-                                <CountDown
-                                    date={targetDate}
-                                    onComplete={() => {
-                                        localStorage.removeItem("otpExpiresAt");
-                                        setTargetDate(0);
-                                    }}
-                                    renderer={({ minutes, seconds, completed }) => {
-                                        if (completed) return null;
-                                        return <span>{minutes}:{seconds.toString().padStart(2, '0')}</span>;
-                                    }}
-                                />
-                            </span>
-                        ) : (
-                            <span onClick={sendMail} className='text-primary cursor-pointer hover:underline font-medium'>
-                                Resend
-                            </span>
-                        )}
-                    </p>
-                </div>
-                <div className='mt-8'>
-                    <button
-                        onClick={handleVerify}
-                        type="button"
-                        disabled={otp.join("").length !== OTP_LENGTH}
-                        className="w-full bg-primary text-primary-foreground h-10 px-4 py-2 rounded-md font-medium transition-colors hover:bg-primary/90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                        Verify Email
-                    </button>
-                </div>
+                    <div className='mt-8'>
+                        <button
+                            type="submit"
+                            disabled={otp.join("").length !== OTP_LENGTH || isLoading}
+                            className="w-full bg-primary text-primary-foreground h-10 px-4 py-2 rounded-md font-medium transition-colors hover:bg-primary/90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                            {isLoading ? "Verifying..." : "Verify Email"}
+                        </button>
+                    </div>
+                </form>
+                {
+                    error.trim() &&
+                    <div className="text-sm text-red-500 mt-2 font-semibold text-center">
+                        {error}
+                    </div>
+                }
             </div>
         </div>
     )

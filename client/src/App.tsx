@@ -8,7 +8,12 @@ import RequireOnboardingRoute from "./components/Routes/OnboardingRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 import { OnboardingProvider } from "./contexts/OnboardingContext";
 import VerifyOtp from "./components/Onboarding/VerifyOtp";
-import Board from "./components/Game/Board";
+import GamePage from "./components/Game/GamePage";
+import { useEffect } from "react";
+import { gameManager } from "./game/gameManager";
+import { useSelector } from "react-redux";
+import type { RootState } from "./store/store";
+import { getCurrentGame } from "./utils/apiFunctions";
 
 const router = createBrowserRouter([
     {
@@ -23,8 +28,8 @@ const router = createBrowserRouter([
                 element: <Home />,
             },
             {
-                path: "/game",
-                element: <Board />
+                path: "/game/:id",
+                element: <GamePage />
             }
         ]
     },
@@ -44,6 +49,34 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
+    const isCompletedOnboarding = useSelector((state: RootState) => state.user.isCompletedOnboarding);
+
+    useEffect(() => {
+        // Initialize the game manager (and connect the socket) only when the user is fully onboarded!
+        if (isCompletedOnboarding) {
+            gameManager.init();
+        }
+    }, [isCompletedOnboarding]);
+
+    const fetchCurrentGame = async () => {
+        try {
+            const res = await getCurrentGame("/api/game/current");
+            console.log(res);
+            if (res?.data?.data?.gameId) {
+                const gameId = res?.data?.data?.gameId;
+                gameManager.reJoinGame(gameId);
+                router.navigate(`/game/${gameId}`);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    useEffect(() => {
+        if (!isCompletedOnboarding) return;
+        fetchCurrentGame();
+    }, [isCompletedOnboarding]);
+
     return (
         <AuthProvider>
             <OnboardingProvider>

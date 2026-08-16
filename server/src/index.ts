@@ -1,4 +1,4 @@
-import "dotenv/config"; // Load environment variables BEFORE other imports
+import "dotenv/config";
 import express, { Request, Response } from "express";
 
 import cookieParser from "cookie-parser";
@@ -7,6 +7,7 @@ import http from "http";
 import { initializeSocket } from "./socket/socket";
 import authRoute from './routes/auth.routes';
 import otpRoute from './routes/otp.route';
+import gameRoute from "./routes/game.route";
 
 const app = express();
 const server = http.createServer(app);
@@ -29,6 +30,7 @@ app.get("/", (req: Request, res: Response) => {
 // Auth routes
 app.use("/api/auth", authRoute);
 app.use("/api/otp", otpRoute);
+app.use("/api/game", gameRoute);
 
 server.listen(PORT, () => {
     console.log(`http://localhost:${PORT}`);
