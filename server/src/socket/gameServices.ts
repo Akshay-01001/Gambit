@@ -1,6 +1,11 @@
 import { prisma } from "../lib/prisma";
+import type { Game } from "../types/types";
 
-const createChessGame = async (player1Id: string, player2Id: string): Promise<string | null> => {
+/**
+ * Create a new chess game in the database.
+ * Randomly assigns white/black and returns the typed Game object (not a JSON string).
+ */
+const createChessGame = async (player1Id: string, player2Id: string): Promise<Game | null> => {
     try {
         const whitePlayer = Math.random() > 0.5 ? player1Id : player2Id;
         const blackPlayer = whitePlayer === player1Id ? player2Id : player1Id;
@@ -21,12 +26,33 @@ const createChessGame = async (player1Id: string, player2Id: string): Promise<st
             return game;
         });
 
-        return JSON.stringify(game);
+        return game as unknown as Game;
     } catch (error) {
+        console.error("Failed to create chess game:", error);
+        return null;
+    }
+};
+
+/**
+ * Fetch a game from the database by ID.
+ * Used when the game is not in memory (e.g., after server restart during a running game).
+ */
+const fetchGameById = async (gameId: string): Promise<Game | null> => {
+    try {
+        const game = await prisma.game.findUnique({
+            where: { id: gameId }
+        });
+
+        if (!game) return null;
+
+        return game as unknown as Game;
+    } catch (error) {
+        console.error("Failed to fetch game from database:", error);
         return null;
     }
 };
 
 export {
-    createChessGame
+    createChessGame,
+    fetchGameById
 }

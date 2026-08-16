@@ -54,11 +54,25 @@ export interface Player {
 }
 
 export interface Game {
-
+    id: string;
+    whitePlayerId: string | null;
+    blackPlayerId: string | null;
+    gameType: string;
+    status: string;
+    result: string | null;
+    endReason: string | null;
+    timeControl: number;
+    whiteTimeLeft: number;
+    blackTimeLeft: number;
+    fen: string;
+    pgn: string;
+    moveCount: number;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 export interface IGameManager {
-    addPlayer: (playerId: string, socketId: string, ws: any) => void
+    addPlayer: (playerId: string, socketId: string, ws: AuthenticatedWebSocket) => Player
     removePlayerConnection: (playerId: string) => void
     addToWaiting: (playerId: string) => void
     removeFromWaiting: (playerId: string) => void

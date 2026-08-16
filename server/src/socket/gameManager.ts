@@ -1,6 +1,7 @@
 import { IGameManager, Player, Game } from "../types/types";
-import { createChessGame } from "./gameServices";
+import { createChessGame, fetchGameById } from "./gameServices";
 import { AuthenticatedWebSocket } from "./socket";
+import { SocketEvents, type ClientMessage, type ServerMessage } from "../types/socketEvents";
 
 class GameManager implements IGameManager {
     private players: Map<string, Player>;
@@ -15,42 +16,67 @@ class GameManager implements IGameManager {
         this.rooms = new Map();
     }
 
+    // ─── Safe Send ───────────────────────────────────
+    // Prevents crashes when sending to a closed/dead socket.
+    private safeSend(ws: AuthenticatedWebSocket, message: ServerMessage): void {
+        try {
+            if (ws.readyState === ws.OPEN) {
+                ws.send(JSON.stringify(message));
+            }
+        } catch (error) {
+            console.error("Failed to send WebSocket message:", error);
+        }
+    }
+
+    // ─── Client Event Router ─────────────────────────
+
     handleClientEvents = (ws: AuthenticatedWebSocket) => {
         ws.on('message', (data: string) => {
             try {
                 const message = JSON.parse(data.toString());
+
+                // Basic payload validation
+                if (!message || typeof message.type !== 'string') {
+                    this.safeSend(ws, { type: SocketEvents.ERROR, message: "Invalid message format" });
+                    return;
+                }
+
                 const userId = ws.user?.userId;
 
-                if (!userId) return;
-
-                if (message.type === 'FIND_GAME') {
-                    this.findMatch(userId);
+                if (!userId) {
+                    this.safeSend(ws, { type: SocketEvents.ERROR, message: "Unauthorized: no user identity" });
+                    return;
                 }
 
-                if (message.type === "REJOIN_GAME") {
-                    const roomId = this.players.get(userId)?.gameId || "";
-                    if (!roomId) {
-                        // handle this
-                    }
-                    this.joinRoom(roomId, ws);
-                    const game = this.games.get(roomId);
-                    if (game) {
-                        ws.send(JSON.stringify({
-                            type: "GAME_STATE",
-                            game_state: game
-                        }));
-                    }
+                switch (message.type) {
+                    case SocketEvents.FIND_GAME:
+                        this.findMatch(userId);
+                        break;
+
+                    case SocketEvents.REJOIN_GAME:
+                        this.handleRejoin(userId, message.gameId, ws);
+                        break;
+
+                    // Events like MAKE_MOVE, JOIN_GAME, RESIGN_GAME
+                    // will be handled here in future iterations
+                    default:
+                        break;
                 }
             } catch (error) {
-                console.error("Invalid socket message format");
+                console.error("Invalid socket message format:", error);
+                this.safeSend(ws, { type: SocketEvents.ERROR, message: "Invalid message format" });
             }
         });
     }
+
+    // ─── Player Management ───────────────────────────
 
     addPlayer(playerId: string, socketId: string, ws: AuthenticatedWebSocket): Player {
         const existingPlayer = this.players.get(playerId);
 
         if (existingPlayer) {
+            const oldWs = existingPlayer.ws;
+
             const updatedPlayer: Player = {
                 ...existingPlayer,
                 socketId,
@@ -58,6 +84,17 @@ class GameManager implements IGameManager {
                 disconnectedAt: null
             };
             this.players.set(playerId, updatedPlayer);
+
+            // Swap the stale ws reference in any room the player belongs to.
+            // Without this, messages would still be sent to the old (dead) socket.
+            if (existingPlayer.gameId) {
+                const room = this.rooms.get(existingPlayer.gameId);
+                if (room) {
+                    room.delete(oldWs);
+                    room.add(ws);
+                }
+            }
+
             return updatedPlayer;
         }
 
@@ -73,7 +110,25 @@ class GameManager implements IGameManager {
     }
 
     removePlayerConnection(userId: string): void {
+        const player = this.players.get(userId);
+        if (!player) return;
+
+        player.disconnectedAt = Date.now();
+
+        // Can't be matched while disconnected
+        this.removeFromWaiting(userId);
+
+        // Remove the stale ws from the game room, but keep the player record
+        // so they can reconnect and rejoin via REJOIN_GAME
+        if (player.gameId) {
+            const room = this.rooms.get(player.gameId);
+            if (room) {
+                room.delete(player.ws);
+            }
+        }
     }
+
+    // ─── Matchmaking ─────────────────────────────────
 
     addToWaiting(playerId: string) {
         this.waitingPlayers.add(playerId);
@@ -84,6 +139,22 @@ class GameManager implements IGameManager {
     }
 
     findMatch(playerId: string) {
+        const player = this.players.get(playerId);
+        if (!player) return;
+
+        // Don't allow searching if already in a game
+        if (player.gameId) {
+            this.safeSend(player.ws, {
+                type: SocketEvents.ERROR,
+                message: "You are already in a game"
+            });
+            return;
+        }
+
+        // Prevent duplicate queue entries (Set already dedupes, but we skip the
+        // opponent scan + timeout if the player is already waiting)
+        if (this.waitingPlayers.has(playerId)) return;
+
         // Find an opponent who is NOT the current player
         let opponentId: string | null = null;
 
@@ -101,19 +172,23 @@ class GameManager implements IGameManager {
         } else {
             // Nobody else is waiting, so add this player to the waitlist
             this.addToWaiting(playerId);
+
+            // 30s timeout: if no match found, remove from queue and notify
             setTimeout(() => {
                 if (this.waitingPlayers.has(playerId)) {
                     this.removeFromWaiting(playerId);
 
                     // Notify the client that no match was found
-                    const player = this.players.get(playerId);
-                    if (player && player.ws) {
-                        player.ws.send(JSON.stringify({ type: 'NO_MATCH_FOUND' }));
+                    const currentPlayer = this.players.get(playerId);
+                    if (currentPlayer) {
+                        this.safeSend(currentPlayer.ws, { type: SocketEvents.NO_MATCH_FOUND });
                     }
                 }
             }, 30000);
         }
     }
+
+    // ─── Room Management ─────────────────────────────
 
     joinRoom(roomId: string, ws: AuthenticatedWebSocket) {
         if (!this.rooms.has(roomId)) {
@@ -129,52 +204,132 @@ class GameManager implements IGameManager {
         }
     }
 
-    broadcastToRoom(roomId: string, message: any) {
+    broadcastToRoom(roomId: string, message: ServerMessage) {
         const room = this.rooms.get(roomId);
-        if (room) {
-            const payload = JSON.stringify(message);
-            for (const client of room) {
-                if (client.readyState === client.OPEN) {
+        if (!room) return;
+
+        const payload = JSON.stringify(message);
+        for (const client of room) {
+            if (client.readyState === client.OPEN) {
+                try {
                     client.send(payload);
+                } catch (error) {
+                    console.error("Failed to broadcast to client:", error);
                 }
             }
         }
     }
 
+    // ─── Game Lifecycle ──────────────────────────────
+
     async createGame(player1Id: string, player2Id: string) {
         const player1 = this.players.get(player1Id);
         const player2 = this.players.get(player2Id);
 
-        if (!player1 || !player1.ws || !player2 || !player2.ws) {
+        if (!player1?.ws || !player2?.ws) return;
+
+        // Re-check both sockets are alive before creating the game
+        if (player1.ws.readyState !== player1.ws.OPEN ||
+            player2.ws.readyState !== player2.ws.OPEN) {
             return;
         }
 
-        const gameStr = await createChessGame(player1Id, player2Id);
-        if (!gameStr) return;
+        try {
+            const game = await createChessGame(player1Id, player2Id);
+            if (!game) {
+                this.safeSend(player1.ws, { type: SocketEvents.ERROR, message: "Failed to create game" });
+                this.safeSend(player2.ws, { type: SocketEvents.ERROR, message: "Failed to create game" });
+                return;
+            }
 
-        const game = JSON.parse(gameStr);
-        const gameId = game.id;
+            const gameId = game.id;
 
-        this.joinRoom(gameId, player1.ws);
-        this.joinRoom(gameId, player2.ws);
-        this.games.set(gameId, game);
+            // Link both players to this game
+            player1.gameId = gameId;
+            player2.gameId = gameId;
 
-        this.broadcastToRoom(gameId, {
-            type: 'MATCH_CREATED',
-            gameId: gameId,
-            game: game
+            this.joinRoom(gameId, player1.ws);
+            this.joinRoom(gameId, player2.ws);
+            this.games.set(gameId, game);
+
+            this.broadcastToRoom(gameId, {
+                type: SocketEvents.MATCH_CREATED,
+                gameId: gameId,
+                game: game
+            });
+        } catch (error) {
+            console.error("Error creating game:", error);
+        }
+    }
+
+    // ─── Rejoin ──────────────────────────────────────
+
+    private async handleRejoin(userId: string, gameId: string, ws: AuthenticatedWebSocket) {
+        if (!gameId || typeof gameId !== 'string') {
+            this.safeSend(ws, { type: SocketEvents.ERROR, message: "Game ID is required" });
+            return;
+        }
+
+        // Try in-memory first, then fall back to DB (handles server-restart case)
+        let game = this.games.get(gameId);
+
+        if (!game) {
+            const dbGame = await fetchGameById(gameId);
+            if (dbGame) {
+                game = dbGame;
+                this.games.set(gameId, game);
+            }
+        }
+
+        if (!game) {
+            this.safeSend(ws, { type: SocketEvents.ERROR, message: "Game not found" });
+            return;
+        }
+
+        // Verify the player actually belongs to this game
+        if (game.whitePlayerId !== userId && game.blackPlayerId !== userId) {
+            this.safeSend(ws, { type: SocketEvents.ERROR, message: "You are not a player in this game" });
+            return;
+        }
+
+        // Update the player's record and rejoin the room
+        const player = this.players.get(userId);
+        if (player) {
+            player.gameId = gameId;
+            player.disconnectedAt = null;
+        }
+
+        this.joinRoom(gameId, ws);
+
+        this.safeSend(ws, {
+            type: SocketEvents.GAME_STATE,
+            game_state: game
         });
     }
 
-    getGame(gameId: string) { }
+    // ─── Stubs (will be implemented when game-play events are added) ─
 
-    getPlayerGame(playerId: string) { }
+    getGame(gameId: string): Game | undefined {
+        return this.games.get(gameId);
+    }
 
-    reconnectPlayer(playerId: string, socketId: string) { }
+    getPlayerGame(playerId: string): Game | undefined {
+        const player = this.players.get(playerId);
+        if (!player?.gameId) return undefined;
+        return this.games.get(player.gameId);
+    }
 
-    makeMove(playerId: string, from: string, to: string) { }
+    reconnectPlayer(playerId: string, socketId: string) {
+        // Handled by addPlayer — it updates the ws reference on reconnection
+    }
 
-    endGame(gameId: string) { }
+    makeMove(playerId: string, from: string, to: string) {
+        // TODO: Implement with chess.js validation
+    }
+
+    endGame(gameId: string) {
+        // TODO: Implement game end logic
+    }
 };
 
 export const gameManager = new GameManager();

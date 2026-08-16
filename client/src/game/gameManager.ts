@@ -1,74 +1,109 @@
-import { setStatus } from '../features/chess.slice';
-import { ws, setSocketMessageCallback, connectSocket } from '../socket/socket';
+import { setStatus, setGame } from '../features/chess.slice';
+import { setSocketMessageCallback, connectSocket, sendMessage } from '../socket/socket';
 import { store } from '../store/store';
+import { SocketEvents, type ServerMessage, type ClientMessage } from '../types/socketEvents';
 
 class GameManager {
+    private initialized = false;
 
-    // Method to initialize socket listeners
+    /**
+     * Initialize the socket connection and register the message handler.
+     * Guarded against duplicate calls (e.g., React Strict Mode double-mounting).
+     */
     public init() {
+        if (this.initialized) return;
+        this.initialized = true;
+
         connectSocket();
         setSocketMessageCallback((data) => {
             this.handleServerMessage(data);
         });
     }
 
-    // Handle different socket events from the server
-    private handleServerMessage(data: any) {
+    // ─── Server Message Handler ──────────────────────
+
+    private handleServerMessage(data: ServerMessage) {
         switch (data.type) {
-            case 'GAME_STARTED':
+            case SocketEvents.MATCH_CREATED:
+                store.dispatch(setGame({
+                    gameId: data.gameId,
+                    fen: data.game.fen,
+                    status: "playing",
+                }));
                 break;
-            case 'MOVE_MADE':
+
+            case SocketEvents.GAME_STATE: {
+                const game = data.game_state;
+                // The active color is the 2nd field in a FEN string (e.g., "w" or "b")
+                const turn = game.fen.split(" ")[1] as "w" | "b";
+                store.dispatch(setGame({
+                    gameId: game.id,
+                    fen: game.fen,
+                    turn,
+                    status: "playing",
+                }));
                 break;
-            case 'GAME_OVER':
+            }
+
+            case SocketEvents.NO_MATCH_FOUND:
+                // Reset the "waiting" status so the Play page shows the button again
+                store.dispatch(setStatus(null));
                 break;
-            case 'MATCH_CREATED':
-                store.dispatch(setStatus("playing"));
+
+            case SocketEvents.MOVE_MADE:
+                // TODO: Handle move updates when move logic is implemented
                 break;
+
+            case SocketEvents.GAME_OVER:
+                // TODO: Handle game over when game end logic is implemented
+                break;
+
+            case SocketEvents.ERROR:
+                console.error("Server error:", data.message);
+                break;
+
             default:
-                console.log("Unknown event type:", data.type);
+                console.warn("Unknown event type:", (data as Record<string, unknown>).type);
         }
     }
 
-    // Helper to send messages safely to the server
-    private sendEvent(message: unknown) {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify(message));
-        } else {
-            console.error("Cannot send message, WebSocket is not open");
-        }
+    // ─── Client → Server Actions ─────────────────────
+
+    /**
+     * Send a typed message to the server via WebSocket.
+     * Uses sendMessage() which auto-queues if the socket isn't ready yet.
+     */
+    private sendEvent(message: ClientMessage) {
+        sendMessage(message);
+    }
+
+    public findGame() {
+        this.sendEvent({ type: SocketEvents.FIND_GAME });
+    }
+
+    public reJoinGame(gameId: string) {
+        this.sendEvent({
+            type: SocketEvents.REJOIN_GAME,
+            gameId
+        });
     }
 
     public makeMove(from: string, to: string, promotion?: string) {
         this.sendEvent({
-            type: 'MAKE_MOVE',
+            type: SocketEvents.MAKE_MOVE,
             payload: { from, to, promotion }
         });
     }
 
     public joinGame(gameId: string) {
         this.sendEvent({
-            type: 'JOIN_GAME',
+            type: SocketEvents.JOIN_GAME,
             payload: { gameId }
         });
     }
 
     public resign() {
-        this.sendEvent({
-            type: 'RESIGN_GAME',
-        });
-    }
-
-    public findGame() {
-        this.sendEvent({
-            type: "FIND_GAME"
-        })
-    }
-
-    public reJoinGame(gameId: string) {
-        this.sendEvent({
-            type: "REJOIN_GAME",
-            gameId
-        })
+        this.sendEvent({ type: SocketEvents.RESIGN_GAME });
     }
 }
 

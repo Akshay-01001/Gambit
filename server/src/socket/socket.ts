@@ -6,12 +6,33 @@ import { gameManager } from "./gameManager";
 
 export interface AuthenticatedWebSocket extends WebSocket {
     user?: TokenPayload;
+    /** Set to true on pong, false before each ping. Used to detect stale connections. */
+    isAlive?: boolean;
 }
 
 export const initializeSocket = (server: HttpServer) => {
     try {
         const wss = new WebSocketServer({ noServer: true });
 
+        // ─── Heartbeat ──────────────────────────────────
+        // Ping every client every 30s. If a client doesn't pong before the
+        // next ping cycle, it's considered dead and terminated.
+        const heartbeatInterval = setInterval(() => {
+            for (const client of wss.clients as Set<AuthenticatedWebSocket>) {
+                if (client.isAlive === false) {
+                    client.terminate();
+                    return;
+                }
+                client.isAlive = false;
+                client.ping();
+            }
+        }, 30000);
+
+        wss.on("close", () => {
+            clearInterval(heartbeatInterval);
+        });
+
+        // ─── Upgrade (Auth) ─────────────────────────────
         server.on("upgrade", (req: IncomingMessage, socket, head) => {
             try {
                 // Parse cookies manually for WebSocket upgrade requests
@@ -45,11 +66,27 @@ export const initializeSocket = (server: HttpServer) => {
             }
         });
 
+        // ─── Connection ─────────────────────────────────
         wss.on("connection", (ws: AuthenticatedWebSocket) => {
             const userId = ws.user?.userId || "";
-            const sockedId = uuid();
-            gameManager.addPlayer(userId, sockedId, ws);
+            const socketId = uuid();
+
+            ws.isAlive = true;
+
+            ws.on("pong", () => {
+                ws.isAlive = true;
+            });
+
+            gameManager.addPlayer(userId, socketId, ws);
             gameManager.handleClientEvents(ws);
+
+            ws.on("close", () => {
+                gameManager.removePlayerConnection(userId);
+            });
+
+            ws.on("error", (error) => {
+                console.error(`WebSocket error for user ${userId}:`, error.message);
+            });
         });
     } catch (error) {
         console.error("Error In Initializing Socket");
