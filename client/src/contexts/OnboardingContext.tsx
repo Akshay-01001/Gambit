@@ -12,7 +12,7 @@ export interface OnboardingFormData {
 type OnboardingContextType = {
     formData: OnboardingFormData;
     setFormData: React.Dispatch<React.SetStateAction<OnboardingFormData>>;
-    handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string, value: any } }) => void;
+    handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string, value: string } }) => void;
     handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     currentStep: number;
     setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
@@ -48,7 +48,7 @@ export const OnboardingProvider = ({ children }: { children: React.ReactNode }) 
     const [currentStep, setCurrentStep] = useState<number>(1);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string, value: any } }) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string, value: string } }) => {
         const { name, value } = e.target;
 
         if (errors[name]) {

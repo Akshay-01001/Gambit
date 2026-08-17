@@ -54,9 +54,17 @@ class GameManager {
                 // TODO: Handle move updates when move logic is implemented
                 break;
 
-            case SocketEvents.GAME_OVER:
-                // TODO: Handle game over when game end logic is implemented
+            case SocketEvents.GAME_OVER: {
+                const game = data.game_state;
+                const turn = game.fen.split(" ")[1] as "w" | "b";
+                store.dispatch(setGame({
+                    gameId: game.id,
+                    fen: game.fen,
+                    turn,
+                    status: game.status.toLowerCase(),
+                }));
                 break;
+            }
 
             case SocketEvents.ERROR:
                 console.error("Server error:", data.message);

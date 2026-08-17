@@ -368,7 +368,7 @@ class GameManager implements IGameManager {
             return;
         }
 
-        this.broadcastToRoom(gameId, { type: SocketEvents.GAME_STATE, game_state: updatedGame });
+        this.broadcastToRoom(gameId, { type: SocketEvents.GAME_OVER, game_state: updatedGame });
         this.clearGame(gameId);
     }
 };
