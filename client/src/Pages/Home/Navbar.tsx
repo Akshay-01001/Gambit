@@ -58,8 +58,8 @@ const Navbar = () => {
         <div className="w-full h-16 flex items-center justify-between px-6 md:px-10 border-b z-50 sticky top-0 backdrop-blur-md home-navbar bg-background/80">
             {/* Left: Logo */}
             <div className="flex items-center cursor-pointer">
-                <span className="gambit-logo h-9 w-9 flex justify-center p-2 rounded-md">
-                    <img src='./logo.svg' alt="logo" />
+                <span className="gambit-logo h-9 w-9 flex justify-center items-center p-1 rounded-md">
+                    <img src='/logo.svg' alt="logo" className="h-full w-full" />
                 </span>
                 <span className="font-bold text-xl ml-3 tracking-wide home-text-primary">Gambit</span>
             </div>

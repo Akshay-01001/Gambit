@@ -80,7 +80,6 @@ export interface IGameManager {
     createGame: (player1Id: string, player2Id: string) => void
     getGame: (gameId: string) => void
     getPlayerGame: (playerId: string) => void
-    reconnectPlayer: (playerId: string, socketId: string) => void
     makeMove: (playerId: string, from: string, to: string) => void
     endGame: (gameId: string) => void
 }

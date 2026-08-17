@@ -56,7 +56,7 @@ export const connectSocket = () => {
         isConnecting = false;
     };
 
-    ws.onclose = (event) => {
+    ws.onclose = () => {
         isConnecting = false;
         clearTimeout(reconnectTimeout);
 

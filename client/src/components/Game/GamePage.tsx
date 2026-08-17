@@ -2,6 +2,7 @@ import { useSelector } from "react-redux"
 import type { RootState } from "../../store/store";
 import Navbar from "../../Pages/Home/Navbar";
 import Board from "./Board";
+import { gameManager } from "../../game/gameManager";
 
 const GamePage = () => {
     const { username } = useSelector((state: RootState) => state.user);
@@ -67,7 +68,10 @@ const GamePage = () => {
                                 </svg>
                                 Draw
                             </button>
-                            <button className="w-full py-3.5 bg-destructive hover:bg-destructive/90 transition-colors rounded-xl text-white font-bold flex items-center justify-center gap-2 shadow-lg cursor-pointer">
+                            <button
+                                className="w-full py-3.5 bg-destructive hover:bg-destructive/90 transition-colors rounded-xl text-white font-bold flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                                onClick={() => gameManager.resign()}
+                            >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
                                     <line x1="4" x2="4" y1="22" y2="15" />

@@ -52,7 +52,41 @@ const fetchGameById = async (gameId: string): Promise<Game | null> => {
     }
 };
 
+const resignGame = async (gameId: string, playerId: string): Promise<Game | null> => {
+    try {
+        const game = await prisma.game.findUnique({
+            where: {
+                id: gameId,
+                status: "PLAYING"
+            }
+        });
+
+        if (!game) {
+            return null;
+        }
+
+        const wonColor = game.whitePlayerId === playerId ? "B" : "W";
+
+        const updatedGame = await prisma.game.update({
+            where: {
+                id: gameId
+            },
+            data: {
+                status: "COMPLETED",
+                result: wonColor === "B" ? "BLACK_WIN" : "WHITE_WIN",
+                endReason: "RESIGNATION"
+            }
+        });
+
+        return updatedGame as unknown as Game;
+    } catch (error) {
+        console.error("Failed to resign the game", error);
+        return null;
+    }
+};
+
 export {
     createChessGame,
-    fetchGameById
-}
+    fetchGameById,
+    resignGame
+};

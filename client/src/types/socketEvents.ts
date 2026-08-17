@@ -49,7 +49,7 @@ export type ClientMessage =
     | { type: typeof SocketEvents.REJOIN_GAME; gameId: string }
     | { type: typeof SocketEvents.MAKE_MOVE; payload: { from: string; to: string; promotion?: string } }
     | { type: typeof SocketEvents.JOIN_GAME; payload: { gameId: string } }
-    | { type: typeof SocketEvents.RESIGN_GAME };
+    | { type: typeof SocketEvents.RESIGN_GAME; gameId: string };
 
 // ─── Server → Client Payloads ────────────────────────────
 

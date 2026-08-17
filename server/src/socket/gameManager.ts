@@ -1,5 +1,5 @@
 import { IGameManager, Player, Game } from "../types/types";
-import { createChessGame, fetchGameById } from "./gameServices";
+import { createChessGame, fetchGameById, resignGame } from "./gameServices";
 import { AuthenticatedWebSocket } from "./socket";
 import { SocketEvents, type ClientMessage, type ServerMessage } from "../types/socketEvents";
 
@@ -57,6 +57,9 @@ class GameManager implements IGameManager {
                         this.handleRejoin(userId, message.gameId, ws);
                         break;
 
+                    case SocketEvents.RESIGN_GAME:
+                        this.handleResign(message.gameId, userId, ws);
+                        break;
                     // Events like MAKE_MOVE, JOIN_GAME, RESIGN_GAME
                     // will be handled here in future iterations
                     default:
@@ -319,16 +322,49 @@ class GameManager implements IGameManager {
         return this.games.get(player.gameId);
     }
 
-    reconnectPlayer(playerId: string, socketId: string) {
-        // Handled by addPlayer — it updates the ws reference on reconnection
-    }
-
     makeMove(playerId: string, from: string, to: string) {
         // TODO: Implement with chess.js validation
     }
 
     endGame(gameId: string) {
-        // TODO: Implement game end logic
+        let game = this.games.get(gameId);
+        if (game) {
+            this.games.delete(gameId);
+        }
+    }
+
+    async handleResign(gameId: string, userId: string, ws: AuthenticatedWebSocket) {
+        // Try in-memory first, then fall back to DB (handles server-restart case)
+        let game = this.games.get(gameId);
+
+        if (!game) {
+            const dbGame = await fetchGameById(gameId);
+            if (dbGame) {
+                game = dbGame;
+                this.games.set(gameId, game);
+            }
+        }
+
+        if (!game) {
+            this.safeSend(ws, { type: SocketEvents.ERROR, message: "Game not found" });
+            return;
+        }
+
+        // Verify the player actually belongs to this game
+        if (game.whitePlayerId !== userId && game.blackPlayerId !== userId) {
+            this.safeSend(ws, { type: SocketEvents.ERROR, message: "You are not a player in this game" });
+            return;
+        }
+
+        const updatedGame = await resignGame(gameId, userId);
+
+        if (!updatedGame) {
+            this.safeSend(ws, { type: SocketEvents.ERROR, message: "Failed to resign game" });
+            return;
+        }
+
+        this.broadcastToRoom(gameId, { type: SocketEvents.GAME_STATE, game_state: updatedGame });
+        this.endGame(gameId);
     }
 };
 

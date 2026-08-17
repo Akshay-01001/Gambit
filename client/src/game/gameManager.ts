@@ -103,7 +103,11 @@ class GameManager {
     }
 
     public resign() {
-        this.sendEvent({ type: SocketEvents.RESIGN_GAME });
+        const state = store.getState();
+        const gameId = state.chess.gameId;
+        if (!gameId) return;
+
+        this.sendEvent({ type: SocketEvents.RESIGN_GAME, gameId });
     }
 }
 
