@@ -56,12 +56,11 @@ const resignGame = async (gameId: string, playerId: string): Promise<Game | null
     try {
         const game = await prisma.game.findUnique({
             where: {
-                id: gameId,
-                status: "PLAYING"
+                id: gameId
             }
         });
 
-        if (!game) {
+        if (!game || game.status !== "PLAYING") {
             return null;
         }
 

@@ -326,7 +326,7 @@ class GameManager implements IGameManager {
         // TODO: Implement with chess.js validation
     }
 
-    endGame(gameId: string) {
+    clearGame(gameId: string) {
         let game = this.games.get(gameId);
         if (game) {
             this.games.delete(gameId);
@@ -350,6 +350,11 @@ class GameManager implements IGameManager {
             return;
         }
 
+        if (game.status !== "PLAYING") {
+            this.safeSend(ws, { type: SocketEvents.ERROR, message: "Game is already finished" });
+            return;
+        }
+
         // Verify the player actually belongs to this game
         if (game.whitePlayerId !== userId && game.blackPlayerId !== userId) {
             this.safeSend(ws, { type: SocketEvents.ERROR, message: "You are not a player in this game" });
@@ -364,7 +369,7 @@ class GameManager implements IGameManager {
         }
 
         this.broadcastToRoom(gameId, { type: SocketEvents.GAME_STATE, game_state: updatedGame });
-        this.endGame(gameId);
+        this.clearGame(gameId);
     }
 };
 
