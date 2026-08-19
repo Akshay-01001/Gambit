@@ -3,6 +3,8 @@
  * ⚠️ Keep in sync with: client/src/types/socketEvents.ts
  */
 
+import { string } from "joi";
+
 // ─── Event Names ─────────────────────────────────────────
 
 export const SocketEvents = {
@@ -20,6 +22,7 @@ export const SocketEvents = {
     MOVE_MADE: "MOVE_MADE",
     GAME_OVER: "GAME_OVER",
     ERROR: "ERROR",
+    PLAYER_DISCONNECTED: "PLAYER_DISCONNECTED"
 } as const;
 
 // ─── Game Data (wire format — matches Prisma Game schema) ─
@@ -59,4 +62,5 @@ export type ServerMessage =
     | { type: typeof SocketEvents.NO_MATCH_FOUND }
     | { type: typeof SocketEvents.MOVE_MADE }
     | { type: typeof SocketEvents.GAME_OVER; game_state: GameData }
-    | { type: typeof SocketEvents.ERROR; message: string };
+    | { type: typeof SocketEvents.ERROR; message: string }
+    | { type: typeof SocketEvents.PLAYER_DISCONNECTED; player_id: string };

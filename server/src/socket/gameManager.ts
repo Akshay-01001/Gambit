@@ -1,7 +1,7 @@
 import { IGameManager, Player, Game } from "../types/types";
 import { createChessGame, fetchGameById, resignGame } from "./gameServices";
 import { AuthenticatedWebSocket } from "./socket";
-import { SocketEvents, type ClientMessage, type ServerMessage } from "../types/socketEvents";
+import { SocketEvents, type ServerMessage } from "../types/socketEvents";
 
 class GameManager implements IGameManager {
     private players: Map<string, Player>;
@@ -126,6 +126,10 @@ class GameManager implements IGameManager {
         if (player.gameId) {
             const room = this.rooms.get(player.gameId);
             if (room) {
+                this.broadcastToRoom(player.gameId, {
+                    type: SocketEvents.PLAYER_DISCONNECTED,
+                    player_id: userId
+                });
                 room.delete(player.ws);
             }
         }
@@ -213,13 +217,7 @@ class GameManager implements IGameManager {
 
         const payload = JSON.stringify(message);
         for (const client of room) {
-            if (client.readyState === client.OPEN) {
-                try {
-                    client.send(payload);
-                } catch (error) {
-                    console.error("Failed to broadcast to client:", error);
-                }
-            }
+            this.safeSend(client, message);
         }
     }
 
