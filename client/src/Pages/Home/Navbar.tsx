@@ -13,11 +13,11 @@ const Navbar = () => {
     const popoverRef = useRef<HTMLDivElement | null>(null);
     const dropdownRef = useRef<HTMLDivElement | null>(null);
     const [isPopOverOpen, setIsPopOverOpen] = useState(false);
-    const { setIsLoggedIn } = useAuth();
+    const { setIsLoggedIn, isOnboarded } = useAuth();
     const dispatch = useDispatch();
 
-    const handleLoginButtonClick = () => {
-        navigate("/login")
+    const handleNavigate = (path: string) => {
+        navigate(path)
     }
 
     useEffect(() => {
@@ -66,13 +66,27 @@ const Navbar = () => {
 
             {/* Center: Navigation */}
             <div className="hidden md:flex items-center justify-center gap-8 flex-1">
-                <a href="#" className="font-medium hover:opacity-75 transition-opacity home-text-primary">Home</a>
+                <button
+                    className="font-medium hover:opacity-75 transition-opacity home-text-primary cursor-pointer"
+                    onClick={() => navigate("/")}
+                >
+                    Home
+                </button>
+                {
+                    user.isCompletedOnboarding &&
+                    <button
+                        className="font-medium hover:opacity-75 transition-opacity home-text-primary cursor-pointer"
+                        onClick={() => navigate("/play")}
+                    >
+                        Play
+                    </button>
+                }
             </div>
 
             {/* Right: Auth Buttons */}
             {(!auth.isLoggedIn && !auth.isLoading) &&
                 <div className="flex items-center justify-end gap-4 md:gap-6">
-                    <button className="px-4 py-1.5 md:px-5 md:py-2 rounded-md font-bold transition-opacity hover:opacity-90 home-btn-primary" onClick={handleLoginButtonClick}>Login</button>
+                    <button className="px-4 py-1.5 md:px-5 md:py-2 rounded-md font-bold transition-opacity hover:opacity-90 home-btn-primary" onClick={() => handleNavigate("/login")}>Login</button>
                 </div>
             }
             {

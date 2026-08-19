@@ -76,10 +76,7 @@ export interface IGameManager {
     removePlayerConnection: (playerId: string) => void
     addToWaiting: (playerId: string) => void
     removeFromWaiting: (playerId: string) => void
-    findMatch: (playerId: string) => void
-    createGame: (player1Id: string, player2Id: string) => void
     getGame: (gameId: string) => void
     getPlayerGame: (playerId: string) => void
-    makeMove: (playerId: string, from: string, to: string) => void
     clearGame: (gameId: string) => void
 }
