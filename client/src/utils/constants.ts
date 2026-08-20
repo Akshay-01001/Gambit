@@ -17,3 +17,33 @@ export const PIECES_MAP_WHITE: Record<string, string> = {
     'q': '/chess-pieces/wQ.svg',
     'k': '/chess-pieces/wK.svg'
 };
+
+export const GAME_TYPES = {
+    // Bullet
+    bullet_1: {
+        game_type: 'BULLET',
+        game_time: 1 * 60 * 1000 // 1 minute in milliseconds
+    },
+    bullet_2: {
+        game_type: 'BULLET',
+        game_time: 2 * 60 * 1000 // 2 minutes
+    },
+    // Blitz
+    blitz_3: {
+        game_type: 'BLITZ',
+        game_time: 3 * 60 * 1000 // 3 minutes
+    },
+    blitz_5: {
+        game_type: 'BLITZ',
+        game_time: 5 * 60 * 1000 // 5 minutes
+    },
+    // Rapid
+    rapid_10: {
+        game_type: 'RAPID',
+        game_time: 10 * 60 * 1000 // 10 minutes
+    },
+    rapid_15: {
+        game_type: 'RAPID',
+        game_time: 15 * 60 * 1000 // 30 minutes
+    }
+};

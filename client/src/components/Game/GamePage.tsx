@@ -3,9 +3,19 @@ import type { RootState } from "../../store/store";
 import Navbar from "../../Pages/Home/Navbar";
 import Board from "./Board";
 import { gameManager } from "../../game/gameManager";
+import Countdown from "react-countdown";
+
+const formatTime = (ms: number | null) => {
+    if (!ms) return "0:00";
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+};
 
 const GamePage = () => {
     const { username } = useSelector((state: RootState) => state.user);
+    const { turn, blackTimeLeft, whiteTimeLeft, turnStartedAt } = useSelector((state: RootState) => state.chess);
 
     return (
         <div className="min-h-screen w-screen bg-background flex flex-col text-white">
@@ -17,7 +27,17 @@ const GamePage = () => {
                         {/* Opponent Info */}
                         <div className="bg-card px-4 py-3 flex items-center justify-between rounded-lg shadow-sm">
                             <span className="text-sm font-medium">Opponent (Black)</span>
-                            <span className="px-3 py-1 bg-[#a2d149] rounded-md text-black font-bold text-sm">32:46</span>
+                            <span className="px-3 py-1 bg-[#a2d149] rounded-md text-black font-bold text-sm tabular-nums">
+                                {turn === 'b' && blackTimeLeft ? (
+                                    <Countdown
+                                        date={turnStartedAt + blackTimeLeft}
+                                        renderer={({ minutes, seconds }) => `${minutes}:${seconds.toString().padStart(2, "0")}`}
+                                        onComplete={() => gameManager.resign()}
+                                    />
+                                ) : (
+                                    formatTime(blackTimeLeft)
+                                )}
+                            </span>
                         </div>
 
                         {/* Board */}
@@ -28,7 +48,17 @@ const GamePage = () => {
                         {/* User Info */}
                         <div className="bg-card px-4 py-3 flex items-center justify-between rounded-lg shadow-sm">
                             <span className="text-sm font-medium">{username} (White)</span>
-                            <span className="px-3 py-1 bg-[#a2d149] rounded-md text-black font-bold text-sm">32:46</span>
+                            <span className="px-3 py-1 bg-[#a2d149] rounded-md text-black font-bold text-sm tabular-nums">
+                                {turn === 'w' && whiteTimeLeft ? (
+                                    <Countdown
+                                        date={turnStartedAt + whiteTimeLeft}
+                                        renderer={({ minutes, seconds }) => `${minutes}:${seconds.toString().padStart(2, "0")}`}
+                                        onComplete={() => gameManager.resign()}
+                                    />
+                                ) : (
+                                    formatTime(whiteTimeLeft)
+                                )}
+                            </span>
                         </div>
                     </div>
 

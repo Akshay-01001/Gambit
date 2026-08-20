@@ -6,13 +6,13 @@ import { findMatch, handleRejoin, handleResign } from "./gameActions";
 class GameManager implements IGameManager {
     private players: Map<string, Player>;
     private games: Map<string, Game>;
-    private waitingPlayers: Set<string>;
+    private waitingPlayers: Map<string, { game_type: string, game_time: number }>;
     private rooms: Map<string, Set<AuthenticatedWebSocket>>;
 
     constructor() {
         this.players = new Map();
         this.games = new Map();
-        this.waitingPlayers = new Set();
+        this.waitingPlayers = new Map();
         this.rooms = new Map();
     }
 
@@ -54,6 +54,7 @@ class GameManager implements IGameManager {
         ws.on('message', (data: string) => {
             try {
                 const message = JSON.parse(data.toString());
+                console.log(message)
 
                 // Basic payload validation
                 if (!message || typeof message.type !== 'string') {
@@ -69,21 +70,21 @@ class GameManager implements IGameManager {
                 }
 
                 switch (message.type) {
-                    case SocketEvents.FIND_GAME:
-                        findMatch(userId);
+                    case SocketEvents.FIND_GAME: {
+                        findMatch(userId, message);
                         break;
-
-                    case SocketEvents.REJOIN_GAME:
+                    }
+                    case SocketEvents.REJOIN_GAME: {
                         handleRejoin(userId, message.gameId, ws);
                         break;
-
-                    case SocketEvents.RESIGN_GAME:
+                    }
+                    case SocketEvents.RESIGN_GAME: {
                         handleResign(message.gameId, userId, ws);
                         break;
-                    // Events like MAKE_MOVE, JOIN_GAME, RESIGN_GAME
-                    // will be handled here in future iterations
-                    default:
+                    }
+                    default: {
                         break;
+                    }
                 }
             } catch (error) {
                 console.error("Invalid socket message format:", error);
@@ -155,8 +156,8 @@ class GameManager implements IGameManager {
         }
     }
 
-    addToWaiting(playerId: string) {
-        this.waitingPlayers.add(playerId);
+    addToWaiting(playerId: string, prefs: { game_type: string, game_time: number }) {
+        this.waitingPlayers.set(playerId, prefs);
     }
 
     removeFromWaiting(playerId: string) {
@@ -181,7 +182,6 @@ class GameManager implements IGameManager {
         const room = this.rooms.get(roomId);
         if (!room) return;
 
-        const payload = JSON.stringify(message);
         for (const client of room) {
             this.safeSend(client, message);
         }

@@ -2,7 +2,6 @@ enum GameType {
     BULLET
     BLITZ
     RAPID
-    CLASSICAL
 }
 
 enum GameStatus {
@@ -30,6 +29,11 @@ enum GameEndReason {
     ABANDONMENT
 }
 
+enum GameTurn {
+    b
+    w
+}
+
 model Game {
     id            String  @id @default(cuid())
     whitePlayerId String?
@@ -41,10 +45,12 @@ model Game {
     status    GameStatus
     result    GameResult?
     endReason GameEndReason?
+    turn      GameTurn       @default(w)
 
     timeControl   Int
     whiteTimeLeft Int
     blackTimeLeft Int
+    turnStartedAt BigInt
 
     fen       String @default("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
     pgn       String @default("")

@@ -5,6 +5,7 @@ import type { RootState } from "../../store/store";
 import { setStatus } from "../../features/chess.slice";
 import { gameManager } from "../../game/gameManager";
 import Navbar from "../Home/Navbar";
+import { GAME_TYPES } from "../../utils/constants";
 
 const gameModes = [
     {
@@ -19,8 +20,8 @@ const gameModes = [
             </svg>
         ),
         options: [
-            { time: "1 min", label: "Bullet" },
-            { time: "2 min", label: "Bullet" }
+            { time: "1 min", label: "Bullet", socket_data: GAME_TYPES["bullet_1"] },
+            { time: "2 min", label: "Bullet", socket_data: GAME_TYPES["bullet_2"] }
         ]
     },
     {
@@ -32,8 +33,8 @@ const gameModes = [
             </svg>
         ),
         options: [
-            { time: "3 min", label: "Blitz" },
-            { time: "5 min", label: "Blitz" }
+            { time: "3 min", label: "Blitz", socket_data: GAME_TYPES["blitz_3"] },
+            { time: "5 min", label: "Blitz", socket_data: GAME_TYPES["blitz_5"] }
         ]
     },
     {
@@ -47,14 +48,14 @@ const gameModes = [
             </svg>
         ),
         options: [
-            { time: "10 min", label: "Rapid" },
-            { time: "15 min", label: "Rapid" }
+            { time: "10 min", label: "Rapid", socket_data: GAME_TYPES["rapid_10"] },
+            { time: "15 min", label: "Rapid", socket_data: GAME_TYPES["rapid_15"] }
         ]
     }
 ];
 
 const PlayPage = () => {
-    const { status, gameId } = useSelector((state: RootState) => state.chess);
+    const { status, id: gameId } = useSelector((state: RootState) => state.chess);
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
@@ -64,9 +65,9 @@ const PlayPage = () => {
         }
     }, [status, gameId, navigate]);
 
-    const handlePlay = () => {
+    const handlePlay = (payload: { game_type: string; game_time: number }) => {
         dispatch(setStatus("waiting"));
-        gameManager.findGame();
+        gameManager.findGame(payload);
     };
 
     return (
@@ -103,7 +104,7 @@ const PlayPage = () => {
                                         {mode.options.map((option, oIdx) => (
                                             <button
                                                 key={oIdx}
-                                                onClick={handlePlay}
+                                                onClick={() => handlePlay(option.socket_data)}
                                                 className="group flex items-center justify-between rounded-xl border border-border bg-card px-5 py-4 text-left transition hover:border-primary/60 hover:bg-card/80 cursor-pointer"
                                             >
                                                 <div>

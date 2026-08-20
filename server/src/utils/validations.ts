@@ -103,8 +103,8 @@ export const createGameSchema = Joi.object({
         "any.only": "Piece color must be white, black, or random",
         "any.required": "Piece color is required"
     }),
-    game_type: Joi.string().valid("BULLET", "BLITZ", "RAPID", "CLASSICAL").required().messages({
-        "any.only": "Game type must be BULLET, BLITZ, RAPID, or CLASSICAL",
+    game_type: Joi.string().valid("BULLET", "BLITZ", "RAPID").required().messages({
+        "any.only": "Game type must be BULLET, BLITZ or RAPID",
         "any.required": "Game type is required"
     }),
     game_time: Joi.number().integer().positive().required().messages({

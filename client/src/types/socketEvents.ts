@@ -35,6 +35,7 @@ export interface GameData {
     timeControl: number;
     whiteTimeLeft: number;
     blackTimeLeft: number;
+    turn: "w" | "b";
     fen: string;
     pgn: string;
     moveCount: number;
@@ -45,7 +46,7 @@ export interface GameData {
 // ─── Client → Server Payloads ────────────────────────────
 
 export type ClientMessage =
-    | { type: typeof SocketEvents.FIND_GAME }
+    | { type: typeof SocketEvents.FIND_GAME; payload: { game_type: string, game_time: number } }
     | { type: typeof SocketEvents.REJOIN_GAME; gameId: string }
     | { type: typeof SocketEvents.MAKE_MOVE; payload: { from: string; to: string; promotion?: string } }
     | { type: typeof SocketEvents.JOIN_GAME; payload: { gameId: string } }

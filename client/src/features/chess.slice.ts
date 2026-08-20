@@ -7,18 +7,29 @@ export type GameStatus = "waiting" | "playing" | "check" | "checkmate" | "stalem
 export type GameResult = "1-0" | "0-1" | "1/2 - 1/2" | null
 
 export interface ChessState {
-    gameId: string | null
-    fen: string
-    turn: "b" | "w"
-    selectedSquare: Square | null
-    legalMoves: string[]
+    id: string | null;
+    whitePlayerId: string | null;
+    blackPlayerId: string | null;
+    gameType: string | null;
+    timeControl: number | null;
+    whiteTimeLeft: number | null;
+    blackTimeLeft: number | null;
+    turnStartedAt: number | null;
+    fen: string;
+    pgn: string;
+    moveCount: number;
+    createdAt: Date | string | null;
+    updatedAt: Date | string | null;
+    turn: "b" | "w";
+    selectedSquare: Square | null;
+    legalMoves: string[];
     lastMove: {
         from: Square,
         to: Square,
-    } | null
-    status: GameStatus
-    winner: "b" | "w"
-    result: GameResult
+    } | null;
+    status: GameStatus;
+    winner: "b" | "w" | null;
+    result: GameResult;
     players: {
         black: {
             username: string,
@@ -47,8 +58,19 @@ export interface ChessState {
 }
 
 const initialState: ChessState = {
-    gameId: null,
+    id: null,
+    whitePlayerId: null,
+    blackPlayerId: null,
+    gameType: null,
+    timeControl: null,
+    whiteTimeLeft: null,
+    blackTimeLeft: null,
+    turnStartedAt: null,
     fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+    pgn: "",
+    moveCount: 0,
+    createdAt: null,
+    updatedAt: null,
     turn: "w",
     selectedSquare: null,
     legalMoves: [],

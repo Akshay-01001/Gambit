@@ -24,23 +24,20 @@ class GameManager {
 
     private handleServerMessage(data: ServerMessage) {
         switch (data.type) {
-            case SocketEvents.MATCH_CREATED:
+            case SocketEvents.MATCH_CREATED: {
+                console.log(data, " =========> MATCH CREATED");
                 store.dispatch(setGame({
-                    gameId: data.gameId,
-                    fen: data.game.fen,
-                    status: "playing",
+                    ...data.game,
+                    status: "playing"
                 }));
                 break;
+            }
 
             case SocketEvents.GAME_STATE: {
                 const game = data.game_state;
-                // The active color is the 2nd field in a FEN string (e.g., "w" or "b")
-                const turn = game.fen.split(" ")[1] as "w" | "b";
                 store.dispatch(setGame({
-                    gameId: game.id,
-                    fen: game.fen,
-                    turn,
-                    status: "playing",
+                    ...game,
+                    status: game.status.toLowerCase()
                 }));
                 break;
             }
@@ -85,8 +82,8 @@ class GameManager {
         sendMessage(message);
     }
 
-    public findGame() {
-        this.sendEvent({ type: SocketEvents.FIND_GAME });
+    public findGame(payload: { game_type: string; game_time: number }) {
+        this.sendEvent({ type: SocketEvents.FIND_GAME, payload });
     }
 
     public reJoinGame(gameId: string) {
@@ -112,7 +109,7 @@ class GameManager {
 
     public resign() {
         const state = store.getState();
-        const gameId = state.chess.gameId;
+        const gameId = state.chess.id;
         if (!gameId) return;
 
         this.sendEvent({ type: SocketEvents.RESIGN_GAME, gameId });

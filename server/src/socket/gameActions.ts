@@ -3,7 +3,7 @@ import { createChessGame, fetchGameById, resignGame } from "./gameServices";
 import { SocketEvents } from "../types/socketEvents";
 import { AuthenticatedWebSocket } from "./socket";
 
-export function findMatch(playerId: string) {
+export function findMatch(playerId: string, message: { payload: { game_type: string; game_time: number } }) {
     const player = gameManager.getPlayer(playerId);
     if (!player) return;
 
@@ -20,11 +20,11 @@ export function findMatch(playerId: string) {
     // opponent scan + timeout if the player is already waiting)
     if (gameManager.getWaitingPlayers().has(playerId)) return;
 
-    // Find an opponent who is NOT the current player
+    // Find an opponent who is NOT the current player and wants the same game type and time control
     let opponentId: string | null = null;
 
-    for (const waitingId of gameManager.getWaitingPlayers()) {
-        if (waitingId !== playerId) {
+    for (const [waitingId, prefs] of gameManager.getWaitingPlayers()) {
+        if (waitingId !== playerId && prefs.game_type === message.payload.game_type && prefs.game_time === message.payload.game_time) {
             opponentId = waitingId;
             break;
         }
@@ -33,10 +33,10 @@ export function findMatch(playerId: string) {
     if (opponentId) {
         // We found a match! Remove opponent from waitlist and start game
         gameManager.removeFromWaiting(opponentId);
-        createGame(playerId, opponentId);
+        createGame(playerId, opponentId, message.payload.game_type, message.payload.game_time);
     } else {
-        // Nobody else is waiting, so add this player to the waitlist
-        gameManager.addToWaiting(playerId);
+        // Nobody else is waiting for this game mode, so add this player to the waitlist
+        gameManager.addToWaiting(playerId, { game_type: message.payload.game_type, game_time: message.payload.game_time });
 
         // 30s timeout: if no match found, remove from queue and notify
         setTimeout(() => {
@@ -53,7 +53,7 @@ export function findMatch(playerId: string) {
     }
 }
 
-export async function createGame(player1Id: string, player2Id: string) {
+export async function createGame(player1Id: string, player2Id: string, game_type: string, game_time: number) {
     const player1 = gameManager.getPlayer(player1Id);
     const player2 = gameManager.getPlayer(player2Id);
 
@@ -66,7 +66,7 @@ export async function createGame(player1Id: string, player2Id: string) {
     }
 
     try {
-        const game = await createChessGame(player1Id, player2Id);
+        const game = await createChessGame(player1Id, player2Id, game_type, game_time);
         if (!game) {
             gameManager.safeSend(player1.ws, { type: SocketEvents.ERROR, message: "Failed to create game" });
             gameManager.safeSend(player2.ws, { type: SocketEvents.ERROR, message: "Failed to create game" });

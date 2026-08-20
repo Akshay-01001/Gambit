@@ -13,7 +13,7 @@ const Navbar = () => {
     const popoverRef = useRef<HTMLDivElement | null>(null);
     const dropdownRef = useRef<HTMLDivElement | null>(null);
     const [isPopOverOpen, setIsPopOverOpen] = useState(false);
-    const { setIsLoggedIn, isOnboarded } = useAuth();
+    const { setIsLoggedIn } = useAuth();
     const dispatch = useDispatch();
 
     const handleNavigate = (path: string) => {
@@ -89,6 +89,7 @@ const Navbar = () => {
                     <button className="px-4 py-1.5 md:px-5 md:py-2 rounded-md font-bold transition-opacity hover:opacity-90 home-btn-primary" onClick={() => handleNavigate("/login")}>Login</button>
                 </div>
             }
+
             {
                 auth.isLoggedIn &&
                 <div className="flex items-center gap-3 text-sm cursor-pointer px-2 py-1 hover:bg-accent hover:rounded-md" ref={dropdownRef} onClick={() => setIsPopOverOpen(prev => !prev)}>
@@ -96,6 +97,7 @@ const Navbar = () => {
                     <span>{user.username}</span>
                 </div>
             }
+
             {auth.isLoggedIn && <div className={`
                         absolute top-13 right-5 z-50 w-48 overflow-hidden rounded-md
                         bg-popover shadow-md origin-top-right

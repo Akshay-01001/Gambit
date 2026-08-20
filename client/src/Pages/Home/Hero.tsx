@@ -7,13 +7,16 @@ const Hero = () => {
                         <span className="h-2 w-2 rounded-full home-pill-icon"></span>
                         <span>Free to play. Forever.</span>
                     </div>
+
                     <div className="text-5xl md:text-7xl font-bold flex flex-col gap-2 pt-6 md:pt-8 tracking-tight home-text-primary">
                         <span>Your Next Move,</span>
                         <span className="heading-bottom">On the clock.</span>
                     </div>
+
                     <div className="header-bottom mt-6 max-w-lg text-base md:text-lg leading-relaxed">
                         A clean, fast place to play chess. Sign in, pick a time control, and start playing in seconds.
                     </div>
+
                     <div className="mt-8 md:mt-10">
                         <button className="px-8 py-3 rounded-md font-bold text-lg transition-opacity hover:opacity-90 shadow-lg home-play-btn cursor-pointer">Play Now</button>
                     </div>
@@ -30,6 +33,7 @@ const Hero = () => {
                         <span className='mt-1 text-sm md:text-base home-text-muted'>Your rating updates as you win, lose, and draw.</span>
                     </div>
                 </div>
+
                 <div className='flex gap-4 max-w-xs'>
                     <span className="trophy-logo h-12 w-12 shrink-0 flex justify-center p-2.5 rounded-md">
                         <img src='./lightning.svg' alt="lightning" className="w-full h-full" />
@@ -39,6 +43,7 @@ const Hero = () => {
                         <span className='mt-1 text-sm md:text-base home-text-muted'>Find matches in seconds with zero delay or lag.</span>
                     </div>
                 </div>
+
                 <div className='flex gap-4 max-w-xs'>
                     <span className="trophy-logo h-12 w-12 shrink-0 flex justify-center p-2.5 rounded-md">
                         <img src='./trophy.svg' alt="trophy" className="w-full h-full" />

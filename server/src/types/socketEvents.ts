@@ -38,6 +38,7 @@ export interface GameData {
     timeControl: number;
     whiteTimeLeft: number;
     blackTimeLeft: number;
+    turn: "w" | "b";
     fen: string;
     pgn: string;
     moveCount: number;

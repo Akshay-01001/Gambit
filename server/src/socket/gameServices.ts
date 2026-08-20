@@ -1,3 +1,4 @@
+import { GameType } from "../generated/prisma/enums";
 import { prisma } from "../lib/prisma";
 import type { Game } from "../types/types";
 
@@ -5,7 +6,7 @@ import type { Game } from "../types/types";
  * Create a new chess game in the database.
  * Randomly assigns white/black and returns the typed Game object (not a JSON string).
  */
-const createChessGame = async (player1Id: string, player2Id: string): Promise<Game | null> => {
+const createChessGame = async (player1Id: string, player2Id: string, game_type: string, game_time: number): Promise<Game | null> => {
     try {
         const whitePlayer = Math.random() > 0.5 ? player1Id : player2Id;
         const blackPlayer = whitePlayer === player1Id ? player2Id : player1Id;
@@ -15,18 +16,22 @@ const createChessGame = async (player1Id: string, player2Id: string): Promise<Ga
                 data: {
                     blackPlayerId: blackPlayer,
                     whitePlayerId: whitePlayer,
-                    timeControl: 600000,
-                    whiteTimeLeft: 600000,
-                    blackTimeLeft: 600000,
-                    gameType: "RAPID",
-                    status: "PLAYING"
+                    timeControl: game_time,
+                    whiteTimeLeft: game_time,
+                    blackTimeLeft: game_time,
+                    gameType: game_type as GameType,
+                    status: "PLAYING",
+                    turnStartedAt: BigInt(Date.now())
                 }
             });
 
             return game;
         });
 
-        return game as unknown as Game;
+        return {
+            ...game,
+            turnStartedAt: Number(game.turnStartedAt)
+        } as unknown as Game;
     } catch (error) {
         console.error("Failed to create chess game:", error);
         return null;
@@ -45,7 +50,10 @@ const fetchGameById = async (gameId: string): Promise<Game | null> => {
 
         if (!game) return null;
 
-        return game as unknown as Game;
+        return {
+            ...game,
+            turnStartedAt: Number(game.turnStartedAt)
+        } as unknown as Game;
     } catch (error) {
         console.error("Failed to fetch game from database:", error);
         return null;
@@ -77,7 +85,10 @@ const resignGame = async (gameId: string, playerId: string): Promise<Game | null
             }
         });
 
-        return updatedGame as unknown as Game;
+        return {
+            ...updatedGame,
+            turnStartedAt: Number(updatedGame.turnStartedAt)
+        } as unknown as Game;
     } catch (error) {
         console.error("Failed to resign the game", error);
         return null;
