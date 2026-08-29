@@ -26,18 +26,31 @@ class GameManager {
         switch (data.type) {
             case SocketEvents.MATCH_CREATED: {
                 console.log(data, " =========> MATCH CREATED");
+                const { blackPlayer, whitePlayer, ...game } = data.game;
                 store.dispatch(setGame({
-                    ...data.game,
-                    status: "playing"
+                    ...game,
+                    status: "playing",
+                    players: {
+                        black: blackPlayer || null,
+                        white: whitePlayer || null,
+                        clock: store.getState().chess.players?.clock || { white: "10:00", black: "10:00" },
+                        promotion: store.getState().chess.players?.promotion || { open: false, from: null, to: null, color: null }
+                    }
                 }));
                 break;
             }
 
             case SocketEvents.GAME_STATE: {
-                const game = data.game_state;
+                const { blackPlayer, whitePlayer, ...game } = data.game_state;
                 store.dispatch(setGame({
                     ...game,
-                    status: game.status.toLowerCase()
+                    status: game.status.toLowerCase(),
+                    players: {
+                        black: blackPlayer || null,
+                        white: whitePlayer || null,
+                        clock: store.getState().chess.players?.clock || { white: "10:00", black: "10:00" },
+                        promotion: store.getState().chess.players?.promotion || { open: false, from: null, to: null, color: null }
+                    }
                 }));
                 break;
             }

@@ -41,6 +41,16 @@ export interface GameData {
     moveCount: number;
     createdAt: Date | string;
     updatedAt: Date | string;
+    blackPlayer?: {
+        username: string;
+        rating: number;
+        id: string;
+    };
+    whitePlayer?: {
+        username: string;
+        rating: number;
+        id: string;
+    };
 }
 
 // ─── Client → Server Payloads ────────────────────────────

@@ -6,21 +6,31 @@ import type { RootState } from "../../store/store";
 
 const Board = () => {
     const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-
-    const { fen } = useSelector((state: RootState) => state.chess)
+    const { fen, blackPlayerId } = useSelector((state: RootState) => state.chess);
+    const { id } = useSelector((state: RootState) => state.user);
 
     const chess = useMemo(() => {
         return new Chess(fen);
     }, [fen]);
 
+    const isUserHasBlackPieces = useMemo(() => {
+        return id === blackPlayerId;
+    }, [blackPlayerId, id]);
+
+    const board = useMemo(() => {
+        if (id === blackPlayerId) {
+            return chess.board().map(row => [...row].reverse()).reverse();
+        }
+        return chess.board();
+    }, [chess, id, blackPlayerId]);
+
     return (
         <div className="grid grid-cols-8 grid-rows-8 aspect-square w-full max-w-150 mx-auto rounded-xl overflow-hidden shadow-lg border-2 border-[#2c2c2a]">
-            {chess.board().map((row, rowIndex) => {
+            {board.map((row, rowIndex) => {
                 return row.map((col, colIndex) => {
                     const isDark = (rowIndex + colIndex) % 2 === 1;
                     const squareColorClass = isDark ? 'bg-[#739552]' : 'bg-[#ebecd0]';
                     const textColorClass = isDark ? 'text-[#ebecd0]' : 'text-[#739552]';
-                    const square = `${letters[colIndex]}${8 - rowIndex}`;
 
                     return (
                         <div
@@ -30,14 +40,14 @@ const Board = () => {
                             {/* Rank labels on the first column */}
                             {colIndex === 0 && (
                                 <span className={`absolute top-0.5 left-1 text-xs font-bold ${textColorClass}`}>
-                                    {8 - rowIndex}
+                                    {isUserHasBlackPieces ? rowIndex + 1 : 8 - rowIndex}
                                 </span>
                             )}
 
                             {/* File labels on the last row */}
                             {rowIndex === 7 && (
                                 <span className={`absolute bottom-0.5 right-1 text-xs font-bold ${textColorClass}`}>
-                                    {letters[colIndex]}
+                                    {isUserHasBlackPieces ? letters[8 - colIndex - 1] : letters[colIndex]}
                                 </span>
                             )}
 

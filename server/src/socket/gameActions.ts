@@ -7,7 +7,6 @@ export function findMatch(playerId: string, message: { payload: { game_type: str
     const player = gameManager.getPlayer(playerId);
     if (!player) return;
 
-    // Don't allow searching if already in a game
     if (player.gameId) {
         gameManager.safeSend(player.ws, {
             type: SocketEvents.ERROR,
@@ -16,14 +15,11 @@ export function findMatch(playerId: string, message: { payload: { game_type: str
         return;
     }
 
-    // Prevent duplicate queue entries (Set already dedupes, but we skip the
-    // opponent scan + timeout if the player is already waiting)
     if (gameManager.getWaitingPlayers().has(playerId)) return;
 
-    // Find an opponent who is NOT the current player and wants the same game type and time control
     let opponentId: string | null = null;
 
-    for (const [waitingId, prefs] of gameManager.getWaitingPlayers()) {
+    for (const [waitingId, prefs] of gameManager.getWaitingPlayers().entries()) {
         if (waitingId !== playerId && prefs.game_type === message.payload.game_type && prefs.game_time === message.payload.game_time) {
             opponentId = waitingId;
             break;
@@ -31,19 +27,15 @@ export function findMatch(playerId: string, message: { payload: { game_type: str
     }
 
     if (opponentId) {
-        // We found a match! Remove opponent from waitlist and start game
         gameManager.removeFromWaiting(opponentId);
         createGame(playerId, opponentId, message.payload.game_type, message.payload.game_time);
     } else {
-        // Nobody else is waiting for this game mode, so add this player to the waitlist
         gameManager.addToWaiting(playerId, { game_type: message.payload.game_type, game_time: message.payload.game_time });
 
-        // 30s timeout: if no match found, remove from queue and notify
         setTimeout(() => {
             if (gameManager.getWaitingPlayers().has(playerId)) {
                 gameManager.removeFromWaiting(playerId);
 
-                // Notify the client that no match was found
                 const currentPlayer = gameManager.getPlayer(playerId);
                 if (currentPlayer) {
                     gameManager.safeSend(currentPlayer.ws, { type: SocketEvents.NO_MATCH_FOUND });
@@ -59,7 +51,6 @@ export async function createGame(player1Id: string, player2Id: string, game_type
 
     if (!player1?.ws || !player2?.ws) return;
 
-    // Re-check both sockets are alive before creating the game
     if (player1.ws.readyState !== player1.ws.OPEN ||
         player2.ws.readyState !== player2.ws.OPEN) {
         return;
@@ -75,7 +66,6 @@ export async function createGame(player1Id: string, player2Id: string, game_type
 
         const gameId = game.id;
 
-        // Link both players to this game
         player1.gameId = gameId;
         player2.gameId = gameId;
 
@@ -99,7 +89,6 @@ export async function handleRejoin(userId: string, gameId: string, ws: Authentic
         return;
     }
 
-    // Try in-memory first, then fall back to DB (handles server-restart case)
     let game = gameManager.getGame(gameId);
 
     if (!game) {
@@ -115,13 +104,11 @@ export async function handleRejoin(userId: string, gameId: string, ws: Authentic
         return;
     }
 
-    // Verify the player actually belongs to this game
     if (game.whitePlayerId !== userId && game.blackPlayerId !== userId) {
         gameManager.safeSend(ws, { type: SocketEvents.ERROR, message: "You are not a player in this game" });
         return;
     }
 
-    // Update the player's record and rejoin the room
     const player = gameManager.getPlayer(userId);
     if (player) {
         player.gameId = gameId;
@@ -141,7 +128,6 @@ export function makeMove(playerId: string, from: string, to: string) {
 }
 
 export async function handleResign(gameId: string, userId: string, ws: AuthenticatedWebSocket) {
-    // Try in-memory first, then fall back to DB (handles server-restart case)
     let game = gameManager.getGame(gameId);
 
     if (!game) {
@@ -162,7 +148,6 @@ export async function handleResign(gameId: string, userId: string, ws: Authentic
         return;
     }
 
-    // Verify the player actually belongs to this game
     if (game.whitePlayerId !== userId && game.blackPlayerId !== userId) {
         gameManager.safeSend(ws, { type: SocketEvents.ERROR, message: "You are not a player in this game" });
         return;

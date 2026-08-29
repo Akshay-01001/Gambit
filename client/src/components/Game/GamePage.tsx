@@ -4,6 +4,8 @@ import Navbar from "../../Pages/Home/Navbar";
 import Board from "./Board";
 import { gameManager } from "../../game/gameManager";
 import Countdown from "react-countdown";
+import ResignModal from "./ResignModal";
+import { useState } from "react";
 
 const formatTime = (ms: number | null) => {
     if (!ms) return "0:00";
@@ -14,23 +16,32 @@ const formatTime = (ms: number | null) => {
 };
 
 const GamePage = () => {
-    const { username } = useSelector((state: RootState) => state.user);
-    const { turn, blackTimeLeft, whiteTimeLeft, turnStartedAt } = useSelector((state: RootState) => state.chess);
+    const { id } = useSelector((state: RootState) => state.user);
+    const { turn, blackTimeLeft, whiteTimeLeft, turnStartedAt, whitePlayerId, blackPlayerId, players, status } = useSelector((state: RootState) => state.chess);
+    const [isResignModalOpen, setIsResignModalOpen] = useState(false);
+
+    const handleResignModalOpen = (isOpen: boolean) => {
+        if (!isOpen) {
+            setIsResignModalOpen(false);
+        } else {
+            setIsResignModalOpen(true);
+        }
+    }
 
     return (
         <div className="min-h-screen w-screen bg-background flex flex-col text-white">
             <Navbar />
-            <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col">
+            <div className="relative flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col">
                 <div className="flex flex-col lg:flex-row gap-8 items-start justify-center">
                     {/* Left Column - Board Area */}
                     <div className="flex flex-col w-full lg:max-w-2xl gap-4">
                         {/* Opponent Info */}
                         <div className="bg-card px-4 py-3 flex items-center justify-between rounded-lg shadow-sm">
-                            <span className="text-sm font-medium">Opponent (Black)</span>
+                            <span className="text-sm font-medium">{blackPlayerId === id ? "You" : players.black?.username || "Opponent"}</span>
                             <span className="px-3 py-1 bg-[#a2d149] rounded-md text-black font-bold text-sm tabular-nums">
                                 {turn === 'b' && blackTimeLeft ? (
                                     <Countdown
-                                        date={turnStartedAt + blackTimeLeft}
+                                        date={(turnStartedAt || 0) + blackTimeLeft}
                                         renderer={({ minutes, seconds }) => `${minutes}:${seconds.toString().padStart(2, "0")}`}
                                         onComplete={() => gameManager.resign()}
                                     />
@@ -47,11 +58,11 @@ const GamePage = () => {
 
                         {/* User Info */}
                         <div className="bg-card px-4 py-3 flex items-center justify-between rounded-lg shadow-sm">
-                            <span className="text-sm font-medium">{username} (White)</span>
+                            <span className="text-sm font-medium">{whitePlayerId === id ? "You" : players.white?.username || "Opponent"}</span>
                             <span className="px-3 py-1 bg-[#a2d149] rounded-md text-black font-bold text-sm tabular-nums">
                                 {turn === 'w' && whiteTimeLeft ? (
                                     <Countdown
-                                        date={turnStartedAt + whiteTimeLeft}
+                                        date={(turnStartedAt || 0) + whiteTimeLeft}
                                         renderer={({ minutes, seconds }) => `${minutes}:${seconds.toString().padStart(2, "0")}`}
                                         onComplete={() => gameManager.resign()}
                                     />
@@ -86,7 +97,9 @@ const GamePage = () => {
 
                         {/* Actions */}
                         <div className="flex flex-col gap-3 mt-2">
-                            <button className="w-full py-3.5 bg-secondary hover:bg-secondary/80 transition-colors rounded-xl text-white font-semibold flex items-center justify-center gap-2 border border-[#3a3a3a] cursor-pointer">
+                            <button className="w-full py-3.5 bg-secondary hover:bg-secondary/80 transition-colors rounded-xl text-white font-semibold flex items-center justify-center gap-2 border border-[#3a3a3a] cursor-pointer"
+                                disabled={status === "playing"}
+                            >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" />
                                 </svg>
@@ -100,7 +113,7 @@ const GamePage = () => {
                             </button>
                             <button
                                 className="w-full py-3.5 bg-destructive hover:bg-destructive/90 transition-colors rounded-xl text-white font-bold flex items-center justify-center gap-2 shadow-lg cursor-pointer"
-                                onClick={() => gameManager.resign()}
+                                onClick={() => handleResignModalOpen(true)}
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
@@ -108,12 +121,19 @@ const GamePage = () => {
                                 </svg>
                                 Resign
                             </button>
-                            <button className="w-full mt-2 py-2 text-gray-400 hover:text-white transition-colors text-sm font-semibold hover:bg-accent hover:rounded-md cursor-pointer">
+                            <button
+                                className="w-full mt-2 py-2 text-gray-400 hover:text-white transition-colors text-sm font-semibold hover:bg-accent hover:rounded-md cursor-pointer"
+                                onClick={() => handleResignModalOpen(false)}
+                            >
                                 Back to home
                             </button>
                         </div>
                     </div>
                 </div>
+                {
+                    isResignModalOpen &&
+                    <ResignModal handleResignModalOpen={handleResignModalOpen} />
+                }
             </div>
         </div>
     )

@@ -1,18 +1,8 @@
-/**
- * Centralized socket event names and typed payloads.
- * ⚠️ Keep in sync with: client/src/types/socketEvents.ts
- */
-
-import { string } from "joi";
-
-// ─── Event Names ─────────────────────────────────────────
-
 export const SocketEvents = {
     // Client → Server
     FIND_GAME: "FIND_GAME",
     REJOIN_GAME: "REJOIN_GAME",
     MAKE_MOVE: "MAKE_MOVE",
-    JOIN_GAME: "JOIN_GAME",
     RESIGN_GAME: "RESIGN_GAME",
 
     // Server → Client
@@ -24,8 +14,6 @@ export const SocketEvents = {
     ERROR: "ERROR",
     PLAYER_DISCONNECTED: "PLAYER_DISCONNECTED"
 } as const;
-
-// ─── Game Data (wire format — matches Prisma Game schema) ─
 
 export interface GameData {
     id: string;
@@ -46,16 +34,12 @@ export interface GameData {
     updatedAt: Date | string;
 }
 
-// ─── Client → Server Payloads ────────────────────────────
-
 export type ClientMessage =
     | { type: typeof SocketEvents.FIND_GAME }
     | { type: typeof SocketEvents.REJOIN_GAME; gameId: string }
     | { type: typeof SocketEvents.MAKE_MOVE; payload: { from: string; to: string; promotion?: string } }
-    | { type: typeof SocketEvents.JOIN_GAME; payload: { gameId: string } }
     | { type: typeof SocketEvents.RESIGN_GAME; gameId: string };
 
-// ─── Server → Client Payloads ────────────────────────────
 
 export type ServerMessage =
     | { type: typeof SocketEvents.MATCH_CREATED; gameId: string; game: GameData }
