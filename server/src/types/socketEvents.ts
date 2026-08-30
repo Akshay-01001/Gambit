@@ -45,7 +45,7 @@ export type ServerMessage =
     | { type: typeof SocketEvents.MATCH_CREATED; gameId: string; game: GameData }
     | { type: typeof SocketEvents.GAME_STATE; game_state: GameData }
     | { type: typeof SocketEvents.NO_MATCH_FOUND }
-    | { type: typeof SocketEvents.MOVE_MADE }
+    | { type: typeof SocketEvents.MOVE_MADE; game_state: GameData }
     | { type: typeof SocketEvents.GAME_OVER; game_state: GameData }
     | { type: typeof SocketEvents.ERROR; message: string }
     | { type: typeof SocketEvents.PLAYER_DISCONNECTED; player_id: string }

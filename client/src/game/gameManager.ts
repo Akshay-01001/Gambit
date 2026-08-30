@@ -60,9 +60,21 @@ class GameManager {
                 store.dispatch(setStatus(null));
                 break;
 
-            case SocketEvents.MOVE_MADE:
-                // TODO: Handle move updates when move logic is implemented
+            case SocketEvents.MOVE_MADE: {
+                const game = data.game_state;
+                store.dispatch(setGame({
+                    fen: game.fen,
+                    pgn: game.pgn,
+                    turn: game.turn,
+                    moveCount: game.moveCount,
+                    whiteTimeLeft: game.whiteTimeLeft,
+                    blackTimeLeft: game.blackTimeLeft,
+                    turnStartedAt: game.turnStartedAt,
+                    selectedSquare: null,
+                    legalMoves: [],
+                }));
                 break;
+            }
 
             case SocketEvents.GAME_OVER: {
                 const game = data.game_state;

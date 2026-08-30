@@ -11,8 +11,5 @@ model Move {
     fen        String
     promotion  String
 
-    whiteTimeLeft Int?
-    blackTimeLeft Int?
-
     createdAt DateTime @default(now())
 }

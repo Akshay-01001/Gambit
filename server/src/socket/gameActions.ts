@@ -2,6 +2,8 @@ import { gameManager } from "./gameManager";
 import { createChessGame, fetchGameById, resignGame } from "./gameServices";
 import { SocketEvents } from "../types/socketEvents";
 import { AuthenticatedWebSocket } from "./socket";
+import { Chess } from "chess.js";
+import { prisma } from "../lib/prisma";
 
 export function findMatch(playerId: string, message: { payload: { game_type: string; game_time: number } }) {
     const player = gameManager.getPlayer(playerId);
@@ -128,8 +130,211 @@ export async function handleRejoin(userId: string, gameId: string, ws: Authentic
     });
 }
 
-export function makeMove(playerId: string, from: string, to: string) {
-    // TODO: Implement with chess.js validation
+export async function makeMove(ws: AuthenticatedWebSocket, from: string, to: string, promotion?: string) {
+    try {
+        const userId = ws.user?.userId;
+        if (!userId) {
+            return gameManager.safeSend(ws, {
+                type: SocketEvents.ERROR,
+                message: "Unauthorized"
+            });
+        }
+
+        // 1. Get the authoritative game state from the server's memory
+        const game = gameManager.getPlayerGame(userId);
+        if (!game) {
+            return gameManager.safeSend(ws, { type: SocketEvents.ERROR, message: "Game not found" });
+        }
+
+        if (game.status !== "PLAYING") {
+            return gameManager.safeSend(ws, { type: SocketEvents.ERROR, message: "Game is already finished" });
+        }
+
+        // 2. Verify it's actually this player's turn
+        const isWhite = game.whitePlayerId === userId;
+        const isBlack = game.blackPlayerId === userId;
+
+        if (!isWhite && !isBlack) {
+            return gameManager.safeSend(ws, { type: SocketEvents.ERROR, message: "You are not a player in this game" });
+        }
+
+        if ((isWhite && game.turn !== 'w') || (isBlack && game.turn !== 'b')) {
+            return gameManager.safeSend(ws, { type: SocketEvents.ERROR, message: "Not your turn" });
+        }
+
+        // 3. Check if the player's time has expired before allowing the move
+        const now = Date.now();
+        const elapsed = now - game.turnStartedAt;
+        const currentTimeLeft = isWhite ? game.whiteTimeLeft : game.blackTimeLeft;
+
+        if (currentTimeLeft - elapsed <= 0) {
+            // Player ran out of time — they lose
+            const winner = isWhite ? "BLACK_WIN" : "WHITE_WIN";
+
+            game.status = "COMPLETED";
+            game.result = winner;
+            game.endReason = "TIMEOUT";
+            if (isWhite) {
+                game.whiteTimeLeft = 0;
+            } else {
+                game.blackTimeLeft = 0;
+            }
+
+            gameManager.setGame(game);
+
+            // Persist to DB
+            await prisma.game.update({
+                where: { id: game.id },
+                data: {
+                    status: "COMPLETED",
+                    result: winner,
+                    endReason: "TIMEOUT",
+                    fen: game.fen,
+                    pgn: game.pgn,
+                    moveCount: game.moveCount,
+                    whiteTimeLeft: game.whiteTimeLeft,
+                    blackTimeLeft: game.blackTimeLeft,
+                    turnStartedAt: BigInt(game.turnStartedAt),
+                    turn: game.turn
+                }
+            });
+
+            gameManager.broadcastToRoom(game.id, {
+                type: SocketEvents.GAME_OVER,
+                game_state: game
+            });
+
+            gameManager.clearGame(game.id);
+            return;
+        }
+
+        // 4. Validate and execute the move using chess.js
+        const chess = new Chess(game.fen);
+
+        let move;
+        try {
+            move = chess.move({ from, to, promotion });
+        } catch (e) {
+            return gameManager.safeSend(ws, { type: SocketEvents.ERROR, message: "Illegal move" });
+        }
+
+        if (!move) {
+            return gameManager.safeSend(ws, { type: SocketEvents.ERROR, message: "Invalid move" });
+        }
+
+        // 5. Update clocks — deduct elapsed time from the moving player
+        if (isWhite) {
+            game.whiteTimeLeft = currentTimeLeft - elapsed;
+        } else {
+            game.blackTimeLeft = currentTimeLeft - elapsed;
+        }
+
+        // 6. Update game state
+        game.fen = chess.fen();
+        game.pgn = chess.pgn();
+        game.turn = chess.turn();
+        game.moveCount += 1;
+        game.turnStartedAt = Date.now();
+        game.updatedAt = new Date();
+
+        // 7. Check for game-over conditions
+        let gameOver = false;
+        let result: string | null = null;
+        let endReason: string | null = null;
+
+        if (chess.isCheckmate()) {
+            gameOver = true;
+            result = isWhite ? "WHITE_WIN" : "BLACK_WIN";
+            endReason = "CHECKMATE";
+        } else if (chess.isStalemate()) {
+            gameOver = true;
+            result = "DRAW";
+            endReason = "STALEMATE";
+        } else if (chess.isInsufficientMaterial()) {
+            gameOver = true;
+            result = "DRAW";
+            endReason = "INSUFFICIENT_MATERIAL";
+        } else if (chess.isThreefoldRepetition()) {
+            gameOver = true;
+            result = "DRAW";
+            endReason = "THREEFOLD_REPETITION";
+        } else if (chess.isDraw()) {
+            // This catches the 50-move rule and other automatic draws
+            gameOver = true;
+            result = "DRAW";
+            endReason = "FIFTY_MOVE_RULE";
+        }
+
+        if (gameOver) {
+            game.status = "COMPLETED";
+            game.result = result;
+            game.endReason = endReason;
+        }
+
+        // 8. Save to memory
+        gameManager.setGame(game);
+
+        // 9. Persist to DB
+        await prisma.game.update({
+            where: { id: game.id },
+            data: {
+                fen: game.fen,
+                pgn: game.pgn,
+                turn: game.turn,
+                moveCount: game.moveCount,
+                whiteTimeLeft: game.whiteTimeLeft,
+                blackTimeLeft: game.blackTimeLeft,
+                turnStartedAt: BigInt(game.turnStartedAt),
+                ...(gameOver && {
+                    status: "COMPLETED",
+                    result: result as any,
+                    endReason: endReason as any
+                })
+            }
+        });
+
+        // 10. Broadcast to both players
+        if (gameOver) {
+            // Update chess profiles for both players
+            const whitePlayerId = game.whitePlayerId!;
+            const blackPlayerId = game.blackPlayerId!;
+
+            if (result === "DRAW") {
+                await prisma.chessProfile.updateMany({
+                    where: { userId: { in: [whitePlayerId, blackPlayerId] } },
+                    data: { totalGames: { increment: 1 } }
+                });
+            } else {
+                const winnerId = result === "WHITE_WIN" ? whitePlayerId : blackPlayerId;
+                const loserId = result === "WHITE_WIN" ? blackPlayerId : whitePlayerId;
+                const winField = result === "WHITE_WIN" ? "totalWhiteWins" : "totalBlackWins";
+
+                await prisma.chessProfile.update({
+                    where: { userId: winnerId },
+                    data: { totalGames: { increment: 1 }, [winField]: { increment: 1 } }
+                });
+                await prisma.chessProfile.update({
+                    where: { userId: loserId },
+                    data: { totalGames: { increment: 1 }, totalGamesLost: { increment: 1 } }
+                });
+            }
+
+            gameManager.broadcastToRoom(game.id, {
+                type: SocketEvents.GAME_OVER,
+                game_state: game
+            });
+
+            gameManager.clearGame(game.id);
+        } else {
+            gameManager.broadcastToRoom(game.id, {
+                type: SocketEvents.MOVE_MADE,
+                game_state: game
+            });
+        }
+    } catch (error) {
+        console.error("Error in makeMove:", error);
+        gameManager.safeSend(ws, { type: SocketEvents.ERROR, message: "Server error while processing move" });
+    }
 }
 
 export async function handleResign(gameId: string, userId: string, ws: AuthenticatedWebSocket) {
