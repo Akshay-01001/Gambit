@@ -22,7 +22,7 @@ export interface ChessState {
     updatedAt: Date | string | null;
     turn: "b" | "w";
     selectedSquare: Square | null;
-    legalMoves: string[];
+    legalMoves: Square[];
     lastMove: {
         from: Square,
         to: Square,
@@ -108,7 +108,7 @@ export const chessSlice = createSlice({
         clearSelectedSquare(state) {
             state.selectedSquare = null;
         },
-        setLegalMoves(state, action: PayloadAction<string[]>) {
+        setLegalMoves(state, action: PayloadAction<Square[]>) {
             state.legalMoves = action.payload;
         },
         setLastMove(state, action: PayloadAction<{ from: Square, to: Square }>) {

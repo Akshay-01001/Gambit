@@ -117,6 +117,11 @@ export async function handleRejoin(userId: string, gameId: string, ws: Authentic
 
     gameManager.joinRoom(gameId, ws);
 
+    gameManager.broadcastToRoom(gameId, {
+        type: SocketEvents.PLAYER_CONNECTED,
+        player_id: userId
+    });
+
     gameManager.safeSend(ws, {
         type: SocketEvents.GAME_STATE,
         game_state: game

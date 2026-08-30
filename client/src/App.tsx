@@ -70,6 +70,8 @@ function App() {
                 const gameId = res?.data?.data?.gameId;
                 gameManager.reJoinGame(gameId);
                 router.navigate(`/game/${gameId}`);
+            } else {
+                router.navigate("/")
             }
         } catch (error) {
             console.error(error);

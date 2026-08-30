@@ -106,13 +106,6 @@ class GameManager {
         });
     }
 
-    public makeMove(from: string, to: string, promotion?: string) {
-        this.sendEvent({
-            type: SocketEvents.MAKE_MOVE,
-            payload: { from, to, promotion }
-        });
-    }
-
     public joinGame(gameId: string) {
         this.sendEvent({
             type: SocketEvents.JOIN_GAME,
@@ -126,6 +119,19 @@ class GameManager {
         if (!gameId) return;
 
         this.sendEvent({ type: SocketEvents.RESIGN_GAME, gameId });
+    }
+
+    public makeMove(from: string, to: string, promotion?: string) {
+        const payload = {
+            from,
+            to,
+            ...(promotion && { promotion })
+        };
+
+        this.sendEvent({
+            type: SocketEvents.MAKE_MOVE,
+            payload
+        });
     }
 }
 

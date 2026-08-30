@@ -2,6 +2,7 @@ import { IGameManager, Player, Game } from "../types/types";
 import { AuthenticatedWebSocket } from "./socket";
 import { SocketEvents, type ServerMessage } from "../types/socketEvents";
 import { findMatch, handleRejoin, handleResign } from "./gameActions";
+import { Chess, Square } from "chess.js";
 
 class GameManager implements IGameManager {
     // Players map: player_id -> Player object
@@ -111,6 +112,10 @@ class GameManager implements IGameManager {
                     }
                     case SocketEvents.RESIGN_GAME: {
                         handleResign(message.gameId, userId, ws);
+                        break;
+                    }
+                    case SocketEvents.MAKE_MOVE: {
+                        console.log(userId, message);
                         break;
                     }
                     default: {
@@ -287,6 +292,21 @@ class GameManager implements IGameManager {
      */
     clearGame(gameId: string) {
         this.games.delete(gameId);
+    }
+
+    /**
+     * 
+     */
+    handleMove(gameId: string, ws: AuthenticatedWebSocket, move: {
+        from: Square,
+        to: Square,
+        isPromotion: boolean
+    }) {
+        try {
+            // 
+        } catch (error) {
+            console.error(error);
+        }
     }
 };
 

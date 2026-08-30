@@ -20,6 +20,17 @@ const GamePage = () => {
     const { turn, blackTimeLeft, whiteTimeLeft, turnStartedAt, whitePlayerId, blackPlayerId, players, status } = useSelector((state: RootState) => state.chess);
     const [isResignModalOpen, setIsResignModalOpen] = useState(false);
 
+    const isUserBlack = id === blackPlayerId;
+    
+    const opponentName = isUserBlack ? (players.white?.username || "Opponent") : (players.black?.username || "Opponent");
+    const opponentTime = isUserBlack ? whiteTimeLeft : blackTimeLeft;
+    const opponentTurnColor = isUserBlack ? 'w' : 'b';
+
+    const isSpectator = id !== whitePlayerId && id !== blackPlayerId;
+    const userName = isSpectator ? (players.white?.username || "White") : "You";
+    const userTime = isUserBlack ? blackTimeLeft : whiteTimeLeft;
+    const userTurnColor = isUserBlack ? 'b' : 'w';
+
     const handleResignModalOpen = (isOpen: boolean) => {
         if (!isOpen) {
             setIsResignModalOpen(false);
@@ -37,16 +48,16 @@ const GamePage = () => {
                     <div className="flex flex-col w-full lg:max-w-2xl gap-4">
                         {/* Opponent Info */}
                         <div className="bg-card px-4 py-3 flex items-center justify-between rounded-lg shadow-sm">
-                            <span className="text-sm font-medium">{blackPlayerId === id ? "You" : players.black?.username || "Opponent"}</span>
+                            <span className="text-sm font-medium">{opponentName}</span>
                             <span className="px-3 py-1 bg-[#a2d149] rounded-md text-black font-bold text-sm tabular-nums">
-                                {turn === 'b' && blackTimeLeft ? (
+                                {turn === opponentTurnColor && opponentTime ? (
                                     <Countdown
-                                        date={(turnStartedAt || 0) + blackTimeLeft}
+                                        date={(turnStartedAt || 0) + opponentTime}
                                         renderer={({ minutes, seconds }) => `${minutes}:${seconds.toString().padStart(2, "0")}`}
                                         onComplete={() => gameManager.resign()}
                                     />
                                 ) : (
-                                    formatTime(blackTimeLeft)
+                                    formatTime(opponentTime)
                                 )}
                             </span>
                         </div>
@@ -58,16 +69,16 @@ const GamePage = () => {
 
                         {/* User Info */}
                         <div className="bg-card px-4 py-3 flex items-center justify-between rounded-lg shadow-sm">
-                            <span className="text-sm font-medium">{whitePlayerId === id ? "You" : players.white?.username || "Opponent"}</span>
+                            <span className="text-sm font-medium">{userName}</span>
                             <span className="px-3 py-1 bg-[#a2d149] rounded-md text-black font-bold text-sm tabular-nums">
-                                {turn === 'w' && whiteTimeLeft ? (
+                                {turn === userTurnColor && userTime ? (
                                     <Countdown
-                                        date={(turnStartedAt || 0) + whiteTimeLeft}
+                                        date={(turnStartedAt || 0) + userTime}
                                         renderer={({ minutes, seconds }) => `${minutes}:${seconds.toString().padStart(2, "0")}`}
                                         onComplete={() => gameManager.resign()}
                                     />
                                 ) : (
-                                    formatTime(whiteTimeLeft)
+                                    formatTime(userTime)
                                 )}
                             </span>
                         </div>
