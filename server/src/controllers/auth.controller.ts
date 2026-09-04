@@ -25,8 +25,7 @@ const registerUser = async (req: Request, res: Response) => {
         // 2. Check if a user already exists with this email
         const existingAuth = await prisma.auth.findFirst({
             where: {
-                user: { email },
-                provider: "LOCAL",
+                user: { email }
             },
         });
 
@@ -46,7 +45,6 @@ const registerUser = async (req: Request, res: Response) => {
             const user = await tx.user.create({
                 data: {
                     email,
-                    username: email.split("@")[0], // temporary username from email
                 },
             });
 
@@ -57,13 +55,6 @@ const registerUser = async (req: Request, res: Response) => {
                     passwordHash,
                     provider: "LOCAL",
                     isVerified: false,
-                },
-            });
-
-            // Create an empty chess profile for the user
-            await tx.chessProfile.create({
-                data: {
-                    userId: user.id,
                 },
             });
 
@@ -130,7 +121,6 @@ const loginUser = async (req: Request, res: Response) => {
         // 2. Find Auth record + join User (Auth has the password, User has email/isDeleted)
         const authRecord = await prisma.auth.findFirst({
             where: {
-                provider: "LOCAL",
                 user: { email },
             },
             include: {
@@ -242,14 +232,37 @@ const googleLogin = async (req: Request, res: Response) => {
             }
         });
 
-        if (existUser && existUser.provider === "LOCAL") {
-            return sendError(res, {
-                code: "BAD_REQUEST",
-                message: "Please link your account with google from settings"
-            });
-        }
+        if (existUser) {
 
-        if (existUser && existUser.provider === "GOOGLE") {
+            // Edge case: Reject soft-deleted users
+            if (existUser.user.isDeleted) {
+                return sendError(res, {
+                    code: "FORBIDDEN",
+                    message: "This account has been deactivated",
+                });
+            }
+
+            // Auto-link: LOCAL user logging in via Google for the first time
+            if (existUser.provider === 'LOCAL') {
+                await prisma.auth.update({
+                    where: {
+                        userId: existUser.userId  // Fix: use userId, not existUser.id (which is the Auth record's own ID)
+                    },
+                    data: {
+                        provider: "BOTH",         // Fix: preserve local login capability
+                        providerId: userDetails.googleId,  // Fix: store Google identity
+                    }
+                });
+            }
+
+            // Update avatar if the user doesn't have one set
+            if (!existUser.user.avatarUrl && userDetails.picture) {
+                await prisma.user.update({
+                    where: { id: existUser.userId },
+                    data: { avatarUrl: userDetails.picture }
+                });
+            }
+
             const { accessToken, refreshToken } = generateTokenPair({
                 userId: existUser.userId,
                 email: existUser.user.email
@@ -272,26 +285,29 @@ const googleLogin = async (req: Request, res: Response) => {
             res.cookie("accessToken", accessToken, accessTokenCookieOptions);
             res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
 
-            return res.status(200).json({
-                success: true,
+            // Fix: Use sendSuccess() for consistent response format
+            return sendSuccess(res, {
+                statusCode: 200,
                 message: "Login Successful",
-                user: {
-                    email: existUser.user.email,
-                    gender: existUser.user.gender,
-                    isOnboardingCompleted: existUser.user.isCompletedOnboarding,
-                    avatar_url: existUser.user.avatarUrl,
-                    country: existUser.user.country
+                data: {
+                    user: {
+                        id: existUser.userId,
+                        email: existUser.user.email,
+                        username: existUser.user.username,
+                        isVerified: existUser.isVerified,
+                        isOnboardingCompleted: existUser.user.isCompletedOnboarding,
+                        avatarUrl: existUser.user.avatarUrl || userDetails.picture,
+                        gender: existUser.user.gender,
+                        country: existUser.user.country,
+                    }
                 }
             });
         }
-
-        const tempUsername = `user_${Date.now().toString(36)}${Math.random().toString(36).substring(2, 7)}`;
 
         const newUserAuth = await prisma.$transaction(async (tx) => {
             const user = await tx.user.create({
                 data: {
                     email: userDetails.email,
-                    username: tempUsername,
                     isCompletedOnboarding: false,
                     avatarUrl: userDetails.picture,
                 }
@@ -326,15 +342,21 @@ const googleLogin = async (req: Request, res: Response) => {
         res.cookie("accessToken", accessToken, accessTokenCookieOptions);
         res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
 
-        return res.status(200).json({
-            success: true,
+        // Fix: Use sendSuccess() for consistent response format
+        return sendSuccess(res, {
+            statusCode: 201,
             message: "Account created. Please complete onboarding.",
-            user: {
-                email: newUserAuth.user.email,
-                gender: newUserAuth.user.gender,
-                isOnboardingCompleted: newUserAuth.user.isCompletedOnboarding,
-                avatar_url: newUserAuth.user.avatarUrl,
-                country: newUserAuth.user.country
+            data: {
+                user: {
+                    id: newUserAuth.userId,
+                    email: newUserAuth.user.email,
+                    username: newUserAuth.user.username,
+                    isVerified: newUserAuth.isVerified,
+                    isOnboardingCompleted: newUserAuth.user.isCompletedOnboarding,
+                    avatarUrl: newUserAuth.user.avatarUrl,
+                    gender: newUserAuth.user.gender,
+                    country: newUserAuth.user.country,
+                }
             }
         });
     } catch (error) {

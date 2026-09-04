@@ -21,4 +21,5 @@ enum Gender {
 enum AuthProvider {
   LOCAL
   GOOGLE
+  BOTH
 }
