@@ -1,9 +1,10 @@
 import { gameManager } from "./gameManager";
-import { createChessGame, fetchGameById, resignGame } from "./gameServices";
+import { createChessGame, fetchGameById, endGame, persistMove } from "./gameServices";
 import { SocketEvents } from "../types/socketEvents";
 import { AuthenticatedWebSocket } from "./socket";
 import { Chess } from "chess.js";
-import { prisma } from "../lib/prisma";
+import type { Game, EndGameData } from "../types/types";
+import type { GameResult, GameEndReason } from "../generated/prisma/enums";
 
 export function findMatch(playerId: string, message: { payload: { game_type: string; game_time: number } }) {
     const player = gameManager.getPlayer(playerId);
@@ -80,6 +81,8 @@ export async function createGame(player1Id: string, player2Id: string, game_type
             gameId: gameId,
             game: game
         });
+
+        startTurnTimer(game.id, game.whiteTimeLeft);
     } catch (error) {
         console.error("Error creating game:", error);
     }
@@ -103,6 +106,11 @@ export async function handleRejoin(userId: string, gameId: string, ws: Authentic
 
     if (!game) {
         gameManager.safeSend(ws, { type: SocketEvents.ERROR, message: "Game not found" });
+        return;
+    }
+
+    if (game.status !== "PLAYING") {
+        gameManager.safeSend(ws, { type: SocketEvents.ERROR, message: "Game is already finished" });
         return;
     }
 
@@ -140,7 +148,6 @@ export async function makeMove(ws: AuthenticatedWebSocket, from: string, to: str
             });
         }
 
-        // 1. Get the authoritative game state from the server's memory
         const game = gameManager.getPlayerGame(userId);
         if (!game) {
             return gameManager.safeSend(ws, { type: SocketEvents.ERROR, message: "Game not found" });
@@ -150,7 +157,6 @@ export async function makeMove(ws: AuthenticatedWebSocket, from: string, to: str
             return gameManager.safeSend(ws, { type: SocketEvents.ERROR, message: "Game is already finished" });
         }
 
-        // 2. Verify it's actually this player's turn
         const isWhite = game.whitePlayerId === userId;
         const isBlack = game.blackPlayerId === userId;
 
@@ -162,53 +168,15 @@ export async function makeMove(ws: AuthenticatedWebSocket, from: string, to: str
             return gameManager.safeSend(ws, { type: SocketEvents.ERROR, message: "Not your turn" });
         }
 
-        // 3. Check if the player's time has expired before allowing the move
         const now = Date.now();
         const elapsed = now - game.turnStartedAt;
         const currentTimeLeft = isWhite ? game.whiteTimeLeft : game.blackTimeLeft;
 
         if (currentTimeLeft - elapsed <= 0) {
-            // Player ran out of time — they lose
-            const winner = isWhite ? "BLACK_WIN" : "WHITE_WIN";
-
-            game.status = "COMPLETED";
-            game.result = winner;
-            game.endReason = "TIMEOUT";
-            if (isWhite) {
-                game.whiteTimeLeft = 0;
-            } else {
-                game.blackTimeLeft = 0;
-            }
-
-            gameManager.setGame(game);
-
-            // Persist to DB
-            await prisma.game.update({
-                where: { id: game.id },
-                data: {
-                    status: "COMPLETED",
-                    result: winner,
-                    endReason: "TIMEOUT",
-                    fen: game.fen,
-                    pgn: game.pgn,
-                    moveCount: game.moveCount,
-                    whiteTimeLeft: game.whiteTimeLeft,
-                    blackTimeLeft: game.blackTimeLeft,
-                    turnStartedAt: BigInt(game.turnStartedAt),
-                    turn: game.turn
-                }
-            });
-
-            gameManager.broadcastToRoom(game.id, {
-                type: SocketEvents.GAME_OVER,
-                game_state: game
-            });
-
-            gameManager.clearGame(game.id);
+            await handleTimeout(game, isWhite);
             return;
         }
 
-        // 4. Validate and execute the move using chess.js
         const chess = new Chess(game.fen);
 
         let move;
@@ -222,14 +190,12 @@ export async function makeMove(ws: AuthenticatedWebSocket, from: string, to: str
             return gameManager.safeSend(ws, { type: SocketEvents.ERROR, message: "Invalid move" });
         }
 
-        // 5. Update clocks — deduct elapsed time from the moving player
         if (isWhite) {
             game.whiteTimeLeft = currentTimeLeft - elapsed;
         } else {
             game.blackTimeLeft = currentTimeLeft - elapsed;
         }
 
-        // 6. Update game state
         game.fen = chess.fen();
         game.pgn = chess.pgn();
         game.turn = chess.turn();
@@ -237,10 +203,9 @@ export async function makeMove(ws: AuthenticatedWebSocket, from: string, to: str
         game.turnStartedAt = Date.now();
         game.updatedAt = new Date();
 
-        // 7. Check for game-over conditions
         let gameOver = false;
-        let result: string | null = null;
-        let endReason: string | null = null;
+        let result: GameResult | null = null;
+        let endReason: GameEndReason | null = null;
 
         if (chess.isCheckmate()) {
             gameOver = true;
@@ -259,7 +224,6 @@ export async function makeMove(ws: AuthenticatedWebSocket, from: string, to: str
             result = "DRAW";
             endReason = "THREEFOLD_REPETITION";
         } else if (chess.isDraw()) {
-            // This catches the 50-move rule and other automatic draws
             gameOver = true;
             result = "DRAW";
             endReason = "FIFTY_MOVE_RULE";
@@ -271,61 +235,45 @@ export async function makeMove(ws: AuthenticatedWebSocket, from: string, to: str
             game.endReason = endReason;
         }
 
-        // 8. Save to memory
         gameManager.setGame(game);
 
-        // 9. Persist to DB
-        await prisma.game.update({
-            where: { id: game.id },
-            data: {
+        if (gameOver) {
+            gameManager.clearTurnTimer(game.id);
+
+            const endData: EndGameData = {
+                result: result!,
+                endReason: endReason!,
                 fen: game.fen,
                 pgn: game.pgn,
                 turn: game.turn,
                 moveCount: game.moveCount,
                 whiteTimeLeft: game.whiteTimeLeft,
                 blackTimeLeft: game.blackTimeLeft,
-                turnStartedAt: BigInt(game.turnStartedAt),
-                ...(gameOver && {
-                    status: "COMPLETED",
-                    result: result as any,
-                    endReason: endReason as any
-                })
-            }
-        });
+                turnStartedAt: game.turnStartedAt
+            };
 
-        // 10. Broadcast to both players
-        if (gameOver) {
-            // Update chess profiles for both players
-            const whitePlayerId = game.whitePlayerId!;
-            const blackPlayerId = game.blackPlayerId!;
-
-            if (result === "DRAW") {
-                await prisma.chessProfile.updateMany({
-                    where: { userId: { in: [whitePlayerId, blackPlayerId] } },
-                    data: { totalGames: { increment: 1 } }
-                });
-            } else {
-                const winnerId = result === "WHITE_WIN" ? whitePlayerId : blackPlayerId;
-                const loserId = result === "WHITE_WIN" ? blackPlayerId : whitePlayerId;
-                const winField = result === "WHITE_WIN" ? "totalWhiteWins" : "totalBlackWins";
-
-                await prisma.chessProfile.update({
-                    where: { userId: winnerId },
-                    data: { totalGames: { increment: 1 }, [winField]: { increment: 1 } }
-                });
-                await prisma.chessProfile.update({
-                    where: { userId: loserId },
-                    data: { totalGames: { increment: 1 }, totalGamesLost: { increment: 1 } }
-                });
-            }
+            const updatedGame = await endGame(game.id, endData);
 
             gameManager.broadcastToRoom(game.id, {
                 type: SocketEvents.GAME_OVER,
-                game_state: game
+                game_state: updatedGame || game
             });
 
             gameManager.clearGame(game.id);
         } else {
+            await persistMove(game.id, {
+                fen: game.fen,
+                pgn: game.pgn,
+                turn: game.turn,
+                moveCount: game.moveCount,
+                whiteTimeLeft: game.whiteTimeLeft,
+                blackTimeLeft: game.blackTimeLeft,
+                turnStartedAt: game.turnStartedAt
+            });
+
+            const nextTimeLeft = game.turn === 'w' ? game.whiteTimeLeft : game.blackTimeLeft;
+            startTurnTimer(game.id, nextTimeLeft);
+
             gameManager.broadcastToRoom(game.id, {
                 type: SocketEvents.MOVE_MADE,
                 game_state: game
@@ -363,7 +311,15 @@ export async function handleResign(gameId: string, userId: string, ws: Authentic
         return;
     }
 
-    const updatedGame = await resignGame(gameId, userId);
+    gameManager.clearTurnTimer(gameId);
+
+    const isResignerWhite = game.whitePlayerId === userId;
+    const result: GameResult = isResignerWhite ? "BLACK_WIN" : "WHITE_WIN";
+
+    const updatedGame = await endGame(gameId, {
+        result,
+        endReason: "RESIGNATION"
+    });
 
     if (!updatedGame) {
         gameManager.safeSend(ws, { type: SocketEvents.ERROR, message: "Failed to resign game" });
@@ -372,4 +328,53 @@ export async function handleResign(gameId: string, userId: string, ws: Authentic
 
     gameManager.broadcastToRoom(gameId, { type: SocketEvents.GAME_OVER, game_state: updatedGame });
     gameManager.clearGame(gameId);
+}
+
+async function handleTimeout(game: Game, isWhiteTimedOut: boolean) {
+    const winner: GameResult = isWhiteTimedOut ? "BLACK_WIN" : "WHITE_WIN";
+
+    game.status = "COMPLETED";
+    game.result = winner;
+    game.endReason = "TIMEOUT";
+    if (isWhiteTimedOut) {
+        game.whiteTimeLeft = 0;
+    } else {
+        game.blackTimeLeft = 0;
+    }
+
+    gameManager.setGame(game);
+    gameManager.clearTurnTimer(game.id);
+
+    const updatedGame = await endGame(game.id, {
+        result: winner,
+        endReason: "TIMEOUT",
+        fen: game.fen,
+        pgn: game.pgn,
+        turn: game.turn,
+        moveCount: game.moveCount,
+        whiteTimeLeft: game.whiteTimeLeft,
+        blackTimeLeft: game.blackTimeLeft,
+        turnStartedAt: game.turnStartedAt
+    });
+
+    gameManager.broadcastToRoom(game.id, {
+        type: SocketEvents.GAME_OVER,
+        game_state: updatedGame || game
+    });
+
+    gameManager.clearGame(game.id);
+}
+
+function startTurnTimer(gameId: string, timeLeftMs: number) {
+    gameManager.clearTurnTimer(gameId);
+
+    const timer = setTimeout(async () => {
+        const game = gameManager.getGame(gameId);
+        if (!game || game.status !== "PLAYING") return;
+
+        const isWhiteTimedOut = game.turn === 'w';
+        await handleTimeout(game, isWhiteTimedOut);
+    }, timeLeftMs);
+
+    gameManager.setTurnTimer(gameId, timer);
 }

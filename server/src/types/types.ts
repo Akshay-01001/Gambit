@@ -1,26 +1,25 @@
 import { Square } from "chess.js"
 import { AuthenticatedWebSocket } from "../socket/socket"
+import type { GameType, GameStatus, GameResult, GameEndReason, GameTurn } from "../generated/prisma/enums"
 
-export type GameStatus = "waiting" | "playing" | "check" | "checkmate" | "stalemate"
+export type ChessUIStatus = "waiting" | "playing" | "check" | "checkmate" | "stalemate"
     | "draw" | "resigned" | "timeout" | "abandone"
 
-export type GameResult = "1-0" | "0-1" | "1/2 - 1/2" | null
-
-export type GameTurn = "b" | "w";
+export type ChessUIResult = "1-0" | "0-1" | "1/2 - 1/2" | null
 
 export interface ChessState {
     gameId: string | null
     fen: string
-    turn: "b" | "w"
+    turn: GameTurn
     selectedSquare: Square | null
     legalMoves: string[]
     lastMove: {
         from: Square,
         to: Square,
     } | null
-    status: GameStatus
-    winner: "b" | "w"
-    result: GameResult
+    status: ChessUIStatus
+    winner: GameTurn
+    result: ChessUIResult
     players: {
         black: {
             username: string,
@@ -42,9 +41,17 @@ export interface ChessState {
             open: boolean,
             from: Square | null,
             to: Square | null,
-            color: "b" | "w" | null
+            color: GameTurn | null
         }
     }
+}
+
+export interface PlayerInfo {
+    username: string;
+    avatarUrl: string;
+    country: string;
+    blitzRating?: number;
+    rapidRating?: number;
 }
 
 export interface Player {
@@ -59,10 +66,10 @@ export interface Game {
     id: string;
     whitePlayerId: string | null;
     blackPlayerId: string | null;
-    gameType: string;
-    status: string;
-    result: string | null;
-    endReason: string | null;
+    gameType: GameType;
+    status: GameStatus;
+    result: GameResult | null;
+    endReason: GameEndReason | null;
     timeControl: number;
     whiteTimeLeft: number;
     blackTimeLeft: number;
@@ -72,21 +79,31 @@ export interface Game {
     moveCount: number;
     createdAt: Date;
     updatedAt: Date;
-    blackPlayer?: {
-        username: string,
-        avatarUrl: string,
-        country: string,
-        blitzRating?: number,
-        rapidRating?: number
-    };
-    whitePlayer?: {
-        username: string,
-        avatarUrl: string,
-        country: string,
-        blitzRating?: number,
-        rapidRating?: number
-    };
-    turnStartedAt: number
+    blackPlayer?: PlayerInfo;
+    whitePlayer?: PlayerInfo;
+    turnStartedAt: number;
+}
+
+export interface MoveData {
+    fen: string;
+    pgn: string;
+    turn: GameTurn;
+    moveCount: number;
+    whiteTimeLeft: number;
+    blackTimeLeft: number;
+    turnStartedAt: number;
+}
+
+export interface EndGameData {
+    result: GameResult;
+    endReason: GameEndReason;
+    fen?: string;
+    pgn?: string;
+    turn?: GameTurn;
+    moveCount?: number;
+    whiteTimeLeft?: number;
+    blackTimeLeft?: number;
+    turnStartedAt?: number;
 }
 
 export interface IGameManager {
@@ -94,7 +111,9 @@ export interface IGameManager {
     removePlayerConnection: (playerId: string) => void
     addToWaiting: (playerId: string, prefs: { game_type: string, game_time: number }) => void
     removeFromWaiting: (playerId: string) => void
-    getGame: (gameId: string) => void
-    getPlayerGame: (playerId: string) => void
+    getGame: (gameId: string) => Game | undefined
+    getPlayerGame: (playerId: string) => Game | undefined
     clearGame: (gameId: string) => void
+    setTurnTimer: (gameId: string, timer: NodeJS.Timeout) => void
+    clearTurnTimer: (gameId: string) => void
 }
