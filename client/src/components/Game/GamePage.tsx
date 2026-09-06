@@ -5,9 +5,8 @@ import Board from "./Board";
 import { gameManager } from "../../game/gameManager";
 import Countdown from "react-countdown";
 import ResignModal from "./ResignModal";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import DrawModal from "./DrawModal";
-import { Chess } from "chess.js";
 
 const formatTime = (ms: number | null) => {
     if (!ms) return "0:00";
@@ -19,7 +18,7 @@ const formatTime = (ms: number | null) => {
 
 const GamePage = () => {
     const { id } = useSelector((state: RootState) => state.user);
-    const { turn, blackTimeLeft, whiteTimeLeft, turnStartedAt, whitePlayerId, blackPlayerId, players, status, timeControl, gameType, pgn } = useSelector((state: RootState) => state.chess);
+    const { turn, blackTimeLeft, whiteTimeLeft, turnStartedAt, whitePlayerId, blackPlayerId, players, status } = useSelector((state: RootState) => state.chess);
     const [isResignModalOpen, setIsResignModalOpen] = useState(false);
     const [isDrawModalOpen, setIsDrawModalOpen] = useState(false);
 
@@ -42,26 +41,6 @@ const GamePage = () => {
         setIsDrawModalOpen(isOpen);
     }
 
-    const movePairs = useMemo(() => {
-        try {
-            const chess = new Chess();
-            chess.loadPgn(pgn);
-            const history = chess.history();
-            const pairs = [];
-            for (let i = 0; i < history.length; i += 2) {
-                pairs.push({
-                    white: history[i],
-                    black: history[i + 1] || null
-                });
-            }
-            return pairs;
-        } catch (e) {
-            console.error("Failed to parse PGN for history", e);
-            return [];
-        }
-    }, [pgn]);
-    console.log(movePairs)
-
     return (
         <div className="min-h-screen w-screen bg-background flex flex-col text-white">
             <Navbar />
@@ -72,19 +51,17 @@ const GamePage = () => {
                         {/* Opponent Info */}
                         <div className="bg-card px-4 py-3 flex items-center justify-between rounded-lg shadow-sm">
                             <span className="text-sm font-medium">{opponentName}</span>
-                            {status === 'playing' &&
-                                <span className="px-3 py-1 bg-[#a2d149] rounded-md text-black font-bold text-sm tabular-nums">
-                                    {turn === opponentTurnColor && opponentTime ? (
-                                        <Countdown
-                                            date={(turnStartedAt || 0) + opponentTime}
-                                            renderer={({ minutes, seconds }) => `${minutes}:${seconds.toString().padStart(2, "0")}`}
-                                            onComplete={() => gameManager.resign()}
-                                        />
-                                    ) : (
-                                        formatTime(opponentTime)
-                                    )}
-                                </span>
-                            }
+                            <span className="px-3 py-1 bg-[#a2d149] rounded-md text-black font-bold text-sm tabular-nums">
+                                {turn === opponentTurnColor && opponentTime ? (
+                                    <Countdown
+                                        date={(turnStartedAt || 0) + opponentTime}
+                                        renderer={({ minutes, seconds }) => `${minutes}:${seconds.toString().padStart(2, "0")}`}
+                                        onComplete={() => gameManager.resign()}
+                                    />
+                                ) : (
+                                    formatTime(opponentTime)
+                                )}
+                            </span>
                         </div>
 
                         {/* Board */}
@@ -95,19 +72,17 @@ const GamePage = () => {
                         {/* User Info */}
                         <div className="bg-card px-4 py-3 flex items-center justify-between rounded-lg shadow-sm">
                             <span className="text-sm font-medium">{userName}</span>
-                            {status === 'playing' &&
-                                <span className="px-3 py-1 bg-[#a2d149] rounded-md text-black font-bold text-sm tabular-nums">
-                                    {turn === userTurnColor && userTime ? (
-                                        <Countdown
-                                            date={(turnStartedAt || 0) + userTime}
-                                            renderer={({ minutes, seconds }) => `${minutes}:${seconds.toString().padStart(2, "0")}`}
-                                            onComplete={() => gameManager.resign()}
-                                        />
-                                    ) : (
-                                        formatTime(userTime)
-                                    )}
-                                </span>
-                            }
+                            <span className="px-3 py-1 bg-[#a2d149] rounded-md text-black font-bold text-sm tabular-nums">
+                                {turn === userTurnColor && userTime ? (
+                                    <Countdown
+                                        date={(turnStartedAt || 0) + userTime}
+                                        renderer={({ minutes, seconds }) => `${minutes}:${seconds.toString().padStart(2, "0")}`}
+                                        onComplete={() => gameManager.resign()}
+                                    />
+                                ) : (
+                                    formatTime(userTime)
+                                )}
+                            </span>
                         </div>
                     </div>
 
@@ -117,29 +92,19 @@ const GamePage = () => {
                         {/* Time Control Box */}
                         <div className="bg-card p-6 rounded-xl flex flex-col gap-2 shadow-sm border border-[#2c2c2a]">
                             <span className="text-[10px] text-gray-400 font-bold tracking-wider uppercase">Time Control</span>
-                            <h2 className="text-xl font-bold text-white">
-                                {timeControl ? Math.round(timeControl / 60000) : 0} min • {gameType ? gameType.charAt(0).toUpperCase() + gameType.slice(1).toLowerCase() : "Unknown"}
-                            </h2>
+                            <h2 className="text-xl font-bold text-white">60 min • Rapid</h2>
                             <p className="text-sm text-gray-400 mt-1 leading-relaxed">
                                 Two players, one device. Pass the board on each move.
                             </p>
                         </div>
 
                         {/* Moves Box */}
-                        <div className="bg-card p-6 rounded-xl flex flex-col gap-2 min-h-[160px] max-h-[300px] shadow-sm border border-[#2c2c2a]">
+                        <div className="bg-card p-6 rounded-xl flex flex-col gap-2 min-h-35 shadow-sm border border-[#2c2c2a]">
                             <span className="text-[10px] text-gray-400 font-bold tracking-wider uppercase">Moves</span>
-                            <div className="flex flex-col gap-1 mt-2 text-sm text-gray-300 font-medium overflow-y-auto pr-2 custom-scrollbar">
-                                {movePairs.length === 0 ? (
-                                    <span className="text-gray-500 italic px-2">No moves yet</span>
-                                ) : (
-                                    movePairs.map((pair, index) => (
-                                        <div key={index} className="grid grid-cols-12 gap-2 hover:bg-[#2c2c2a] px-2 py-1 rounded transition-colors">
-                                            <span className="col-span-2 text-gray-500">{index + 1}.</span>
-                                            <span className="col-span-5">{pair.white}</span>
-                                            <span className="col-span-5">{pair.black || ""}</span>
-                                        </div>
-                                    ))
-                                )}
+                            <div className="flex flex-col gap-1 mt-2 text-sm text-gray-300 font-medium">
+                                <div className="grid grid-cols-2 gap-4 hover:bg-[#2c2c2a] px-2 py-1 rounded">
+                                    <span>1. e3</span>
+                                </div>
                             </div>
                         </div>
 
