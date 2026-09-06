@@ -177,7 +177,16 @@ export async function makeMove(ws: AuthenticatedWebSocket, from: string, to: str
             return;
         }
 
-        const chess = new Chess(game.fen);
+        const chess = new Chess();
+        try {
+            if (game.pgn) {
+                chess.loadPgn(game.pgn);
+            } else {
+                chess.load(game.fen);
+            }
+        } catch (e) {
+            chess.load(game.fen);
+        }
 
         let move;
         try {
