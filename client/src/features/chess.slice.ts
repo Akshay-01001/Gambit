@@ -2,9 +2,9 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { Square } from 'chess.js';
 
 export type GameStatus = "waiting" | "playing" | "check" | "checkmate" | "stalemate"
-    | "draw" | "resigned" | "timeout" | "abandone" | null
+    | "draw" | "resigned" | "timeout" | "abandone" | "completed" | null
 
-export type GameResult = "1-0" | "0-1" | "1/2 - 1/2" | null
+export type GameResult = "1-0" | "0-1" | "1/2 - 1/2" | "WHITE_WIN" | "BLACK_WIN" | "DRAW" | null
 
 export interface ChessState {
     id: string | null;
@@ -30,17 +30,20 @@ export interface ChessState {
     status: GameStatus;
     winner: "b" | "w" | null;
     result: GameResult;
+    endReason: string | null;
     players: {
         black: {
             username: string,
-            userId: string,
-            rating: string,
+            avatarUrl: string,
+            blitzRating?: number,
+            rapidRating?: number,
             country: string
         } | null,
         white: {
             username: string,
-            userId: string,
-            rating: string,
+            avatarUrl: string,
+            blitzRating?: number,
+            rapidRating?: number,
             country: string
         } | null,
         clock: {
@@ -78,6 +81,7 @@ const initialState: ChessState = {
     status: null,
     winner: null,
     result: null,
+    endReason: null,
     players: {
         black: null,
         white: null,

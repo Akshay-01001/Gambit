@@ -1,10 +1,10 @@
-import OnboardingLayout from "./OnboardingLayout"
+import OnboardingLayout from "../OnboardingLayout"
 import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { API_BASE_URL } from "../../utils/constants";
+import { API_BASE_URL } from "../../../utils/constants";
 import { useNavigate } from "react-router-dom";
-import { useOnboarding } from "../../hooks/useOnboarding";
-import { useAuth } from "../../hooks/useAuth";
+import { useOnboarding } from "../../../hooks/useOnboarding";
+import { useAuth } from "../../../hooks/useAuth";
 
 const Step2 = () => {
 

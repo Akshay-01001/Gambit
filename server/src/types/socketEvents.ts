@@ -33,10 +33,24 @@ export interface GameData {
     moveCount: number;
     createdAt: Date | string;
     updatedAt: Date | string;
+    blackPlayer?: {
+        username: string;
+        avatarUrl: string;
+        country: string;
+        blitzRating?: number;
+        rapidRating?: number;
+    };
+    whitePlayer?: {
+        username: string;
+        avatarUrl: string;
+        country: string;
+        blitzRating?: number;
+        rapidRating?: number;
+    };
 }
 
 export type ClientMessage =
-    | { type: typeof SocketEvents.FIND_GAME }
+    | { type: typeof SocketEvents.FIND_GAME; payload: { game_type: string; game_time: number } }
     | { type: typeof SocketEvents.REJOIN_GAME; gameId: string }
     | { type: typeof SocketEvents.MAKE_MOVE; payload: { from: string; to: string; promotion?: string } }
     | { type: typeof SocketEvents.RESIGN_GAME; gameId: string };

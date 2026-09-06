@@ -27,8 +27,9 @@ const VerifyOtp = () => {
     }, []);
 
     const getInitialDate = () => {
+        const now  = Date.now();
         const expiresAt = Number(localStorage.getItem("otpExpiresAt"));
-        if (expiresAt && expiresAt > Date.now()) {
+        if (expiresAt && expiresAt > now) {
             return expiresAt;
         }
         if (expiresAt) {

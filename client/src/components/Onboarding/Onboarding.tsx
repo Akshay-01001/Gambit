@@ -1,9 +1,8 @@
-import Step1 from '../../components/Onboarding/Step1';
-import Step2 from '../../components/Onboarding/Step2';
-// import Step3 from '../../components/Onboarding/VerifyOtp';
+import Step1 from './Steps/Step1';
+import Step2 from './Steps/Step2';
 import { useOnboarding } from '../../hooks/useOnboarding';
 
-const OnboardingPage = () => {
+const Onboarding = () => {
     const { currentStep } = useOnboarding();
 
     const getPageFromStep = (step: number) => {
@@ -13,7 +12,7 @@ const OnboardingPage = () => {
             case 2:
                 return <Step2 />;
             default:
-                return <Step1 />;
+                return null;
         }
     }
 
@@ -22,4 +21,4 @@ const OnboardingPage = () => {
     )
 }
 
-export default OnboardingPage;
+export default Onboarding;

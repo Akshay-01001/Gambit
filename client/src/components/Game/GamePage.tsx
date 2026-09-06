@@ -1,6 +1,6 @@
 import { useSelector } from "react-redux"
 import type { RootState } from "../../store/store";
-import Navbar from "../../Pages/Home/Navbar";
+import Navbar from "../Home/Navbar";
 import Board from "./Board";
 import { gameManager } from "../../game/gameManager";
 import Countdown from "react-countdown";

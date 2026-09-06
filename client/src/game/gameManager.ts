@@ -80,7 +80,7 @@ class GameManager {
                 const game = data.game_state;
                 const turn = game.fen.split(" ")[1] as "w" | "b";
                 store.dispatch(setGame({
-                    gameId: game.id,
+                    id: game.id,
                     fen: game.fen,
                     turn,
                     status: game.status.toLowerCase(),
@@ -115,13 +115,6 @@ class GameManager {
         this.sendEvent({
             type: SocketEvents.REJOIN_GAME,
             gameId
-        });
-    }
-
-    public joinGame(gameId: string) {
-        this.sendEvent({
-            type: SocketEvents.JOIN_GAME,
-            payload: { gameId }
         });
     }
 

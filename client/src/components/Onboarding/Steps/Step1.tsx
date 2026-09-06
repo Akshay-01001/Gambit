@@ -1,9 +1,9 @@
-import CountrySelect from './CountrySelect'
+import CountrySelect from '../CountrySelect'
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import OnboardingLayout from './OnboardingLayout';
+import { useAuth } from '../../../hooks/useAuth';
+import OnboardingLayout from '../OnboardingLayout';
 import type React from 'react';
-import { useOnboarding } from '../../hooks/useOnboarding';
+import { useOnboarding } from '../../../hooks/useOnboarding';
 
 const Step1 = () => {
     const { isOnboarded } = useAuth();

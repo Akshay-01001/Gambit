@@ -1,8 +1,9 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth } from "../hooks/useAuth";
 
 const RequireOnboardingRoute = () => {
     const { isLoading, isLoggedIn, isOnboarded, isEmailVerified } = useAuth();
+    console.log(isLoading, isLoggedIn, isOnboarded)
 
     if (isLoading) {
         return <div className="h-screen w-screen flex justify-center items-center text-lg">Loading....</div>;
@@ -14,6 +15,10 @@ const RequireOnboardingRoute = () => {
 
     if (isLoggedIn && !isEmailVerified) {
         return <Navigate to={"/verify-otp"} replace />
+    }
+
+    if (!isLoggedIn) {
+        return <Navigate to={"/login"} />
     }
 
     // Allow access if fully onboarded, OR if completely logged out (so they can browse the home page)

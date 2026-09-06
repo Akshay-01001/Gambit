@@ -10,7 +10,6 @@ export const SocketEvents = {
     FIND_GAME: "FIND_GAME",
     REJOIN_GAME: "REJOIN_GAME",
     MAKE_MOVE: "MAKE_MOVE",
-    JOIN_GAME: "JOIN_GAME",
     RESIGN_GAME: "RESIGN_GAME",
 
     // Server → Client
@@ -44,13 +43,17 @@ export interface GameData {
     turnStartedAt: number;
     blackPlayer?: {
         username: string;
-        rating: number;
-        id: string;
+        avatarUrl: string;
+        country: string;
+        blitzRating?: number;
+        rapidRating?: number;
     };
     whitePlayer?: {
         username: string;
-        rating: number;
-        id: string;
+        avatarUrl: string;
+        country: string;
+        blitzRating?: number;
+        rapidRating?: number;
     };
 }
 
@@ -60,7 +63,6 @@ export type ClientMessage =
     | { type: typeof SocketEvents.FIND_GAME; payload: { game_type: string, game_time: number } }
     | { type: typeof SocketEvents.REJOIN_GAME; gameId: string }
     | { type: typeof SocketEvents.MAKE_MOVE; payload: { from: string; to: string; promotion?: string } }
-    | { type: typeof SocketEvents.JOIN_GAME; payload: { gameId: string } }
     | { type: typeof SocketEvents.RESIGN_GAME; gameId: string };
 
 // ─── Server → Client Payloads ────────────────────────────
