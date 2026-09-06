@@ -2,6 +2,9 @@ import { setStatus, setGame } from '../features/chess.slice';
 import { setSocketMessageCallback, connectSocket, sendMessage } from '../socket/socket';
 import { store } from '../store/store';
 import { SocketEvents, type ServerMessage, type ClientMessage } from '../types/socketEvents';
+import { toast } from 'react-toastify';
+import React from 'react';
+import DrawOfferToast from '../components/Game/DrawOfferToast';
 
 class GameManager {
     private initialized = false;
@@ -92,6 +95,18 @@ class GameManager {
                 console.error("Server error:", data.message);
                 break;
 
+            case SocketEvents.DRAW_OFFERED:
+                toast(React.createElement(DrawOfferToast, { 
+                    onAccept: () => this.acceptDraw() 
+                }), {
+                    position: "top-center",
+                    autoClose: 60000,
+                    closeOnClick: false,
+                    draggable: false,
+                    theme: "dark"
+                });
+                break;
+
             default:
                 console.warn("Unknown event type:", (data as Record<string, unknown>).type);
         }
@@ -137,6 +152,24 @@ class GameManager {
             type: SocketEvents.MAKE_MOVE,
             payload
         });
+    }
+
+    public offerDraw() {
+        const state = store.getState();
+        const gameId = state.chess.id
+        if (!gameId) {
+            return;
+        }
+        this.sendEvent({ type: SocketEvents.OFFER_DRAW, gameId })
+    }
+
+    public acceptDraw() {
+        const state = store.getState();
+        const gameId = state.chess.id;
+        if (!gameId) {
+            return;
+        }
+        this.sendEvent({ type: SocketEvents.ACCEPT_DRAW, gameId });
     }
 }
 

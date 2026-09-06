@@ -1,7 +1,7 @@
 import { IGameManager, Player, Game } from "../types/types";
 import { AuthenticatedWebSocket } from "./socket";
 import { SocketEvents, type ServerMessage } from "../types/socketEvents";
-import { findMatch, handleRejoin, handleResign, makeMove } from "./gameActions";
+import { findMatch, handleRejoin, handleResign, makeMove, handleDrawAccept } from "./gameActions";
 
 class GameManager implements IGameManager {
     private players: Map<string, Player>;
@@ -81,6 +81,14 @@ class GameManager implements IGameManager {
                     }
                     case SocketEvents.MAKE_MOVE: {
                         makeMove(ws, message?.payload?.from, message?.payload?.to, message?.payload?.promotion);
+                        break;
+                    }
+                    case SocketEvents.OFFER_DRAW: {
+                        this.sendDrawRequest(userId, message.gameId);
+                        break;
+                    }
+                    case SocketEvents.ACCEPT_DRAW: {
+                        handleDrawAccept(message.gameId, userId, ws);
                         break;
                     }
                     default: {
@@ -224,6 +232,21 @@ class GameManager implements IGameManager {
         if (existing) {
             clearTimeout(existing);
             this.turnTimers.delete(gameId);
+        }
+    }
+
+    sendDrawRequest(userId: string, gameId: string) {
+        const game = this.games.get(gameId);
+        const opponentId = game?.blackPlayerId === userId ? game?.whitePlayerId : game?.blackPlayerId;
+        if (!opponentId) {
+            // handle error
+            return;
+        }
+        const player = this.players.get(opponentId);
+        if (player && player.ws) {
+            this.safeSend(player.ws, {
+                type: SocketEvents.DRAW_OFFERED
+            });
         }
     }
 };

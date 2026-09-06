@@ -57,7 +57,8 @@ export interface ChessState {
             color: "b" | "w" | null
         },
     }
-    gameOverModalOpen: boolean
+    gameOverModalOpen: boolean,
+    showDrawOfferNotification: boolean
 }
 
 const initialState: ChessState = {
@@ -96,7 +97,8 @@ const initialState: ChessState = {
             color: null
         },
     },
-    gameOverModalOpen: false
+    gameOverModalOpen: false,
+    showDrawOfferNotification: false
 }
 
 export const chessSlice = createSlice({

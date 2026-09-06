@@ -330,6 +330,48 @@ export async function handleResign(gameId: string, userId: string, ws: Authentic
     gameManager.clearGame(gameId);
 }
 
+export async function handleDrawAccept(gameId: string, userId: string, ws: AuthenticatedWebSocket) {
+    let game = gameManager.getGame(gameId);
+
+    if (!game) {
+        const dbGame = await fetchGameById(gameId);
+        if (dbGame) {
+            game = dbGame;
+            gameManager.setGame(game);
+        }
+    }
+
+    if (!game) {
+        gameManager.safeSend(ws, { type: SocketEvents.ERROR, message: "Game not found" });
+        return;
+    }
+
+    if (game.status !== "PLAYING") {
+        gameManager.safeSend(ws, { type: SocketEvents.ERROR, message: "Game is already finished" });
+        return;
+    }
+
+    if (game.whitePlayerId !== userId && game.blackPlayerId !== userId) {
+        gameManager.safeSend(ws, { type: SocketEvents.ERROR, message: "You are not a player in this game" });
+        return;
+    }
+
+    gameManager.clearTurnTimer(gameId);
+
+    const updatedGame = await endGame(gameId, {
+        result: "DRAW",
+        endReason: "DRAW_AGREEMENT"
+    });
+
+    if (!updatedGame) {
+        gameManager.safeSend(ws, { type: SocketEvents.ERROR, message: "Failed to draw game" });
+        return;
+    }
+
+    gameManager.broadcastToRoom(gameId, { type: SocketEvents.GAME_OVER, game_state: updatedGame });
+    gameManager.clearGame(gameId);
+}
+
 async function handleTimeout(game: Game, isWhiteTimedOut: boolean) {
     const winner: GameResult = isWhiteTimedOut ? "BLACK_WIN" : "WHITE_WIN";
 

@@ -6,6 +6,7 @@ import { gameManager } from "../../game/gameManager";
 import Countdown from "react-countdown";
 import ResignModal from "./ResignModal";
 import { useState } from "react";
+import DrawModal from "./DrawModal";
 
 const formatTime = (ms: number | null) => {
     if (!ms) return "0:00";
@@ -19,9 +20,10 @@ const GamePage = () => {
     const { id } = useSelector((state: RootState) => state.user);
     const { turn, blackTimeLeft, whiteTimeLeft, turnStartedAt, whitePlayerId, blackPlayerId, players, status } = useSelector((state: RootState) => state.chess);
     const [isResignModalOpen, setIsResignModalOpen] = useState(false);
+    const [isDrawModalOpen, setIsDrawModalOpen] = useState(false);
 
     const isUserBlack = id === blackPlayerId;
-    
+
     const opponentName = isUserBlack ? (players.white?.username || "Opponent") : (players.black?.username || "Opponent");
     const opponentTime = isUserBlack ? whiteTimeLeft : blackTimeLeft;
     const opponentTurnColor = isUserBlack ? 'w' : 'b';
@@ -32,11 +34,11 @@ const GamePage = () => {
     const userTurnColor = isUserBlack ? 'b' : 'w';
 
     const handleResignModalOpen = (isOpen: boolean) => {
-        if (!isOpen) {
-            setIsResignModalOpen(false);
-        } else {
-            setIsResignModalOpen(true);
-        }
+        setIsResignModalOpen(isOpen);
+    }
+
+    const handleDrawModalOpen = (isOpen: boolean) => {
+        setIsDrawModalOpen(isOpen);
     }
 
     return (
@@ -116,7 +118,9 @@ const GamePage = () => {
                                 </svg>
                                 New game
                             </button>
-                            <button className="w-full py-3.5 bg-background hover:bg-background/80 transition-colors rounded-xl text-white font-semibold flex items-center justify-center gap-2 border border-[#3a3a3a] cursor-pointer">
+                            <button className="w-full py-3.5 bg-background hover:bg-background/80 transition-colors rounded-xl text-white font-semibold flex items-center justify-center gap-2 border border-[#3a3a3a] cursor-pointer"
+                                onClick={() => handleDrawModalOpen(true)}
+                            >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
                                 </svg>
@@ -144,6 +148,10 @@ const GamePage = () => {
                 {
                     isResignModalOpen &&
                     <ResignModal handleResignModalOpen={handleResignModalOpen} />
+                }
+                {
+                    isDrawModalOpen &&
+                    <DrawModal handleDrawModalOpen={handleDrawModalOpen} />
                 }
             </div>
         </div>

@@ -6,7 +6,7 @@ interface ResignModalProps {
 
 const ResignModal: React.FC<ResignModalProps> = ({ handleResignModalOpen }) => {
     return createPortal(
-        <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 z-50">
             <div className="bg-card w-full max-w-sm rounded-2xl border border-[#2c2c2a] shadow-2xl p-6 flex flex-col gap-4">
                 <div className="flex flex-col gap-4 text-center items-center">
                     <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center">
