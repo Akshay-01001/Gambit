@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../../store/store';
 import { useEffect, useRef, useState } from 'react';
 import { logout } from '../../utils/apiFunctions';
+import { disconnectSocket } from '../../socket/socket';
 
 const Navbar = () => {
     const navigate = useNavigate();
@@ -46,8 +47,10 @@ const Navbar = () => {
             const response = await logout("/api/auth/logout");
             if (response.data.success) {
                 setIsLoggedIn(false)
-                navigate("/login");
+                disconnectSocket();
+                localStorage.clear();
                 dispatch({ type: "LOG_OUT" });
+                navigate("/login");
             }
         } catch (error) {
             console.error(error);

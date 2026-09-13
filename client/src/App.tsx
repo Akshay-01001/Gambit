@@ -70,13 +70,10 @@ function App() {
     const fetchCurrentGame = async () => {
         try {
             const res = await getCurrentGame("/api/game/current");
-            console.log(res);
             if (res?.data?.data?.gameId) {
                 const gameId = res?.data?.data?.gameId;
                 gameManager.reJoinGame(gameId);
                 router.navigate(`/game/${gameId}`);
-            } else {
-                router.navigate("/")
             }
         } catch (error) {
             console.error(error);
