@@ -10,6 +10,23 @@ export interface UserState {
     country: string
     isCompletedOnboarding: boolean
     isVerified: boolean
+    chessProfile?: {
+        blitzRating: number;
+        bulletRating: number;
+        classicalRating: number;
+        createdAt: string;
+        highestRating: number;
+        id: string;
+        rapidRating: number;
+        totalBlackWins: number;
+        totalGames: number;
+        totalGamesDraw: number;
+        totalGamesLost: number;
+        totalGamesWon: number;
+        totalWhiteWins: number;
+        updatedAt: string;
+        userId: string;
+    }
 }
 
 const initialState: UserState = {

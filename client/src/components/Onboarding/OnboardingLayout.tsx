@@ -18,7 +18,7 @@ const OnboardingLayout = ({ children, currentStep, totalSteps = 2 }: OnboardingL
                         <span className="bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] h-10 w-10 flex justify-center items-center rounded-lg">
                             <img src='/logo.svg' alt="logo" className="h-6 w-6" />
                         </span>
-                        <span className="font-bold text-xl ml-3 tracking-wide">Gambit</span>
+                        <span className="font-bold text-xl ml-3 tracking-wide font-display">Gambit</span>
                     </div>
                     {currentStep > 1 && (
                         <button

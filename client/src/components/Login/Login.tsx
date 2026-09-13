@@ -113,7 +113,7 @@ const Login = () => {
                             <span className="gambit-logo h-10 w-10 flex justify-center items-center rounded-lg">
                                 <img src='./logo.svg' alt="logo" className="h-6 w-6" />
                             </span>
-                            <span className="font-bold text-xl ml-3 tracking-wide">Gambit</span>
+                            <span className="font-bold text-xl ml-3 tracking-wide font-display">Gambit</span>
                         </div>
                     </div>
                     <div className='flex flex-col gap-3 mb-12'>
@@ -138,7 +138,7 @@ const Login = () => {
                             <span className="gambit-logo h-10 w-10 flex justify-center items-center rounded-lg">
                                 <img src='./logo.svg' alt="logo" className="h-6 w-6" />
                             </span>
-                            <span className="font-bold text-xl ml-3 tracking-wide">Gambit</span>
+                            <span className="font-bold text-xl ml-3 tracking-wide font-display">Gambit</span>
                         </div>
                     </div>
 

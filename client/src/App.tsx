@@ -9,6 +9,7 @@ import { OnboardingProvider } from "./contexts/OnboardingContext";
 import VerifyOtp from "./components/Onboarding/VerifyOtp";
 import GamePage from "./components/Game/GamePage";
 import PlayPage from "./components/Play/PlayPage";
+import ProfilePage from "./components/Profile/ProfilePage";
 import { useEffect } from "react";
 import { gameManager } from "./game/gameManager";
 import { useSelector } from "react-redux";
@@ -47,6 +48,10 @@ const router = createBrowserRouter([
             {
                 path: '/verify-otp',
                 element: <VerifyOtp />
+            },
+            {
+                path: '/profile',
+                element: <ProfilePage />
             }
         ]
     }

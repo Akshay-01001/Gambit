@@ -5,7 +5,7 @@ import Board from "./Board";
 import { gameManager } from "../../game/gameManager";
 import Countdown from "react-countdown";
 import ResignModal from "./ResignModal";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import DrawModal from "./DrawModal";
 
 const formatTime = (ms: number | null) => {
@@ -18,7 +18,7 @@ const formatTime = (ms: number | null) => {
 
 const GamePage = () => {
     const { id } = useSelector((state: RootState) => state.user);
-    const { turn, blackTimeLeft, whiteTimeLeft, turnStartedAt, whitePlayerId, blackPlayerId, players, status } = useSelector((state: RootState) => state.chess);
+    const { turn, blackTimeLeft, whiteTimeLeft, turnStartedAt, whitePlayerId, blackPlayerId, players, status, timeControl, gameType, pgn, result, endReason } = useSelector((state: RootState) => state.chess);
     const [isResignModalOpen, setIsResignModalOpen] = useState(false);
     const [isDrawModalOpen, setIsDrawModalOpen] = useState(false);
 
@@ -40,6 +40,33 @@ const GamePage = () => {
     const handleDrawModalOpen = (isOpen: boolean) => {
         setIsDrawModalOpen(isOpen);
     }
+
+    const gameOverMessage = useMemo(() => {
+        if (!result || !endReason) return null;
+
+        switch (endReason) {
+            case "RESIGNATION":
+                return result === "WHITE_WIN" ? "Black resigned. White wins." : "White resigned. Black wins.";
+            case "CHECKMATE":
+                return result === "WHITE_WIN" ? "White wins by checkmate." : "Black wins by checkmate.";
+            case "TIMEOUT":
+                return result === "WHITE_WIN" ? "Black ran out of time. White wins." : "White ran out of time. Black wins.";
+            case "DRAW_AGREEMENT":
+                return "Game drawn by agreement.";
+            case "STALEMATE":
+                return "Game drawn by stalemate.";
+            case "INSUFFICIENT_MATERIAL":
+                return "Game drawn by insufficient material.";
+            case "THREEFOLD_REPETITION":
+                return "Game drawn by threefold repetition.";
+            case "FIFTY_MOVE_RULE":
+                return "Game drawn by fifty-move rule.";
+            case "ABANDONMENT":
+                return result === "WHITE_WIN" ? "Black abandoned the game. White wins." : "White abandoned the game. Black wins.";
+            default:
+                return "Game Over.";
+        }
+    }, [result, endReason]);
 
     return (
         <div className="min-h-screen w-screen bg-background flex flex-col text-white">
@@ -98,15 +125,13 @@ const GamePage = () => {
                             </p>
                         </div>
 
-                        {/* Moves Box */}
-                        <div className="bg-card p-6 rounded-xl flex flex-col gap-2 min-h-35 shadow-sm border border-[#2c2c2a]">
-                            <span className="text-[10px] text-gray-400 font-bold tracking-wider uppercase">Moves</span>
-                            <div className="flex flex-col gap-1 mt-2 text-sm text-gray-300 font-medium">
-                                <div className="grid grid-cols-2 gap-4 hover:bg-[#2c2c2a] px-2 py-1 rounded">
-                                    <span>1. e3</span>
-                                </div>
+                        {/* Game Over Message Box */}
+                        {gameOverMessage && (
+                            <div className={`p-4 rounded-xl flex flex-col gap-1 shadow-sm border ${result === "DRAW" ? "bg-[#2a2a2a] border-[#404040]" : "bg-[#1c2e1f] border-[#2d4a31]"}`}>
+                                <h3 className={`font-bold ${result === "DRAW" ? "text-gray-300" : "text-[#88c558]"}`}>{gameOverMessage}</h3>
+                                <p className="text-sm text-gray-400">Game saved to your history.</p>
                             </div>
-                        </div>
+                        )}
 
                         {/* Actions */}
                         <div className="flex flex-col gap-3 mt-2">

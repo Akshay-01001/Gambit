@@ -61,7 +61,7 @@ const Navbar = () => {
                 <span className="gambit-logo h-9 w-9 flex justify-center items-center p-1 rounded-md">
                     <img src='/logo.svg' alt="logo" className="h-full w-full" />
                 </span>
-                <span className="font-bold text-xl ml-3 tracking-wide home-text-primary">Gambit</span>
+                <span className="font-bold text-xl ml-3 tracking-wide font-display home-text-primary">Gambit</span>
             </div>
 
             {/* Center: Navigation */}
@@ -109,7 +109,7 @@ const Navbar = () => {
                     `}
                 ref={popoverRef}
             >
-                <button className='flex h-10 w-full items-center gap-2 border-t px-3 text-left cursor-pointer hover:bg-accent'>
+                <button className='flex h-10 w-full items-center gap-2 border-t px-3 text-left cursor-pointer hover:bg-accent' onClick={() => { setIsPopOverOpen(false); navigate("/profile"); }}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user mr-2 h-4 w-4" aria-hidden="true">
                         <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
                         <circle cx="12" cy="7" r="4"></circle>

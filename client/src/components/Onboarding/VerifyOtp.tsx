@@ -9,25 +9,21 @@ import CountDown from "react-countdown"
 import axios from "axios";
 
 const VerifyOtp = () => {
-    const OTP_LENGTH = 6;
-    const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-    const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
     const { email } = useSelector((state: RootState) => state.user)
+    const OTP_LENGTH = 6;
+
+    const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
     const hasSentOtp = useRef<boolean>(false);
+
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { setIsEmailVerified } = useAuth();
+
+    const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
-
-    useEffect(() => {
-        if (inputRefs.current[0]) {
-            inputRefs.current[0].focus();
-        }
-    }, []);
-
-    const getInitialDate = () => {
-        const now  = Date.now();
+    const [targetDate, setTargetDate] = useState<number>(() => {
+        const now = Date.now();
         const expiresAt = Number(localStorage.getItem("otpExpiresAt"));
         if (expiresAt && expiresAt > now) {
             return expiresAt;
@@ -36,9 +32,14 @@ const VerifyOtp = () => {
             localStorage.removeItem("otpExpiresAt");
         }
         return 0;
-    };
+    });
 
-    const [targetDate, setTargetDate] = useState<number>(getInitialDate());
+    useEffect(() => {
+        if (inputRefs.current[0]) {
+            inputRefs.current[0].focus();
+        }
+    }, []);
+
 
     const sendMail = async () => {
         hasSentOtp.current = true;
@@ -152,7 +153,7 @@ const VerifyOtp = () => {
                         <span className="bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] h-10 w-10 flex justify-center items-center rounded-lg">
                             <img src='/logo.svg' alt="logo" className="h-6 w-6" />
                         </span>
-                        <span className="font-bold text-xl ml-3 tracking-wide">Gambit</span>
+                        <span className="font-bold text-xl ml-3 tracking-wide font-display">Gambit</span>
                     </div>
 
                 </div>
@@ -182,7 +183,7 @@ const VerifyOtp = () => {
                         </div>
                         <p className='text-sm text-muted-foreground'>
                             Didn't receive the code?{' '}
-                            {targetDate > Date.now() ? (
+                            {targetDate > 0 ? (
                                 <span className='text-primary font-medium'>
                                     <CountDown
                                         date={targetDate}
