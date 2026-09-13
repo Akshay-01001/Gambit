@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../../store/store';
+import api from '../../utils/api';
+import { setUser } from '../../features/user.slice';
 
 interface FormState {
     username: string
@@ -12,6 +14,7 @@ interface FormState {
 
 const EditProfile: React.FC = () => {
     const { username, country, bio, avatarUrl } = useSelector((state: RootState) => state.user);
+    const dispatch = useDispatch();
     const [formData, setFormData] = useState<FormState>({
         username: username,
         country: country,
@@ -42,27 +45,43 @@ const EditProfile: React.FC = () => {
         }));
     }
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         const form = new FormData();
+        let hasChanges = false;
 
         if (formData.username !== username) {
             form.append('username', formData.username);
+            hasChanges = true;
         }
         if (formData.country !== country) {
             form.append('country', formData.country);
+            hasChanges = true;
         }
         if (formData.bio !== bio) {
             form.append('bio', formData.bio);
-        }
-        if (formData.avatar_url !== avatarUrl) {
-            form.append('avatar_url', formData.avatar_url);
+            hasChanges = true;
         }
         if (formData.file) {
             form.append('file', formData.file);
+            hasChanges = true;
         }
 
-        if (Object.keys(form).length === 0) {
+        if (!hasChanges) {
             return;
+        }
+
+        try {
+            const response = await api.patch('/api/auth/update', form, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            if (response.data?.success) {
+                dispatch(setUser(response.data.data));
+            }
+        } catch (error) {
+            console.error("Failed to update profile", error);
         }
     }
 
@@ -76,7 +95,7 @@ const EditProfile: React.FC = () => {
                     <span className="text-sm font-semibold text-muted-foreground">Profile Picture</span>
                     <div className="flex items-center gap-4">
                         <div className="h-16 w-16 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground text-2xl font-bold shrink-0 overflow-hidden">
-                            <img src={formData.avatar_url} alt="avatar" />
+                            <img src={formData.avatar_url} alt="avatar" className='h-full w-full' />
                         </div>
                         <label className="cursor-pointer flex items-center gap-2 px-3 py-2 bg-secondary hover:bg-secondary/80 rounded-md text-sm transition-colors border border-border">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-upload">
@@ -96,6 +115,7 @@ const EditProfile: React.FC = () => {
                     <input
                         type="text"
                         id="username"
+                        name="username"
                         value={formData.username}
                         onChange={handelChange}
                         className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
@@ -108,6 +128,7 @@ const EditProfile: React.FC = () => {
                     <input
                         type="text"
                         id="country"
+                        name="country"
                         value={formData.country}
                         onChange={handelChange}
                         className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
@@ -119,6 +140,7 @@ const EditProfile: React.FC = () => {
                     <label htmlFor="bio" className="text-sm font-semibold">Bio</label>
                     <textarea
                         id="bio"
+                        name="bio"
                         rows={4}
                         value={formData.bio}
                         onChange={(e) => handelChange(e)}
