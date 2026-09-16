@@ -22,29 +22,23 @@ const HeaderSection: React.FC = () => {
                 style={{ minHeight: '300px' }}
             >
                 {/* Background Gradient Effect - matching reference image */}
-                <div
-                    className="absolute top-0 right-0 w-2/3 h-full opacity-30 pointer-events-none"
-                    style={{
-                        background:
-                            'radial-gradient(circle at top right, var(--primary), transparent 70%)',
-                    }}
-                ></div>
+                <div className="absolute top-0 right-0 w-2/3 h-full opacity-30 pointer-events-none bg-card"></div>
 
                 {/* Profile Info */}
-                <div className="flex items-center gap-6 relative z-10 mb-12">
-                    <div className="h-24 w-24 rounded-full bg-primary/20 flex items-center justify-center text-primary text-4xl font-display font-bold shrink-0 overflow-hidden">
+                <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-6 relative z-10 mb-12 text-center md:text-left">
+                    <div className="h-20 w-20 md:h-24 md:w-24 rounded-full bg-primary/20 flex items-center justify-center text-primary text-4xl font-display font-bold shrink-0 overflow-hidden shadow-sm">
                         <img
                             src={avatarUrl}
-                            alt="avarat"
-                            className="h-full w-full"
+                            alt="avatar"
+                            className="h-full w-full object-cover"
                         />
                     </div>
-                    <div>
-                        <h1 className="text-3xl font-display font-bold mb-1">
+                    <div className="flex flex-col items-center md:items-start">
+                        <h1 className="text-2xl md:text-3xl font-display font-bold mb-1">
                             {username}
                         </h1>
-                        <p className="text-muted-foreground mb-3">{email}</p>
-                        <div className="flex gap-3 items-center">
+                        <p className="text-muted-foreground mb-4">{email}</p>
+                        <div className="flex flex-wrap justify-center md:justify-start gap-3 items-center">
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-primary/10 text-primary text-sm font-semibold border border-primary/20">
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -101,7 +95,7 @@ const HeaderSection: React.FC = () => {
                 </div>
 
                 {/* Stats Container */}
-                <div className="relative z-10 grid grid-cols-4 gap-4 w-full">
+                <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
                     {statsData.map((stat, index) => (
                         <div
                             key={index}
