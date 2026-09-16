@@ -9,7 +9,7 @@ const getUserDetails = async (req: Request, res: Response) => {
 
         if (!userId) {
             return sendError(res, {
-                code: "UNAUTHORIZED",
+                statusCode: 401,
                 message: "Unathorized"
             });
         }
@@ -37,7 +37,7 @@ const getUserDetails = async (req: Request, res: Response) => {
 
         if (!userDetails) {
             return sendError(res, {
-                code: "UNAUTHORIZED",
+                statusCode: 401,
                 message: "Unathorized"
             });
         }
@@ -61,7 +61,7 @@ const getUserDetails = async (req: Request, res: Response) => {
         const errorMessage =
             error instanceof Error ? error.message : "Something went wrong";
         return sendError(res, {
-            code: "INTERNAL_ERROR",
+            statusCode: 500,
             message: errorMessage,
         });
     }
@@ -72,7 +72,7 @@ const updateProfile = async (req: Request, res: Response) => {
         const userId = req.user?.id;
         if (!userId) {
             return sendError(res, {
-                code: "UNAUTHORIZED",
+                statusCode: 401,
                 message: "Unauthorized",
             });
         }
@@ -142,7 +142,7 @@ const updateProfile = async (req: Request, res: Response) => {
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Something went wrong";
         return sendError(res, {
-            code: "INTERNAL_ERROR",
+            statusCode: 500,
             message: errorMessage,
         });
     }

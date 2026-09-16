@@ -15,7 +15,7 @@ const registerUser = async (req: Request, res: Response) => {
 
         if (error) {
             return sendError(res, {
-                code: "VALIDATION_ERROR",
+                statusCode: 400,
                 message: error.details[0].message || "Validation Error",
             });
         }
@@ -31,7 +31,7 @@ const registerUser = async (req: Request, res: Response) => {
 
         if (existingAuth) {
             return sendError(res, {
-                code: "CONFLICT",
+                statusCode: 400,
                 message: "An account already exists with this email",
             });
         }
@@ -97,7 +97,7 @@ const registerUser = async (req: Request, res: Response) => {
         const errorMessage =
             error instanceof Error ? error.message : "Something went wrong";
         return sendError(res, {
-            code: "INTERNAL_ERROR",
+            statusCode: 500,
             message: errorMessage,
         });
     }
@@ -111,7 +111,7 @@ const loginUser = async (req: Request, res: Response) => {
 
         if (error) {
             return sendError(res, {
-                code: "VALIDATION_ERROR",
+                statusCode: 400,
                 message: error.details[0].message || "Validation Error",
             });
         }
@@ -131,7 +131,7 @@ const loginUser = async (req: Request, res: Response) => {
         // Use a generic message to avoid leaking whether email exists
         if (!authRecord) {
             return sendError(res, {
-                code: "UNAUTHORIZED",
+                statusCode: 401,
                 message: "Invalid email or password",
             });
         }
@@ -139,7 +139,7 @@ const loginUser = async (req: Request, res: Response) => {
         // 3. Check if user account is soft-deleted
         if (authRecord.user.isDeleted) {
             return sendError(res, {
-                code: "FORBIDDEN",
+                statusCode: 403,
                 message: "This account has been deactivated",
             });
         }
@@ -147,7 +147,7 @@ const loginUser = async (req: Request, res: Response) => {
         // 4. Verify password
         if (!authRecord.passwordHash) {
             return sendError(res, {
-                code: "UNAUTHORIZED",
+                statusCode: 401,
                 message: "Invalid email or password",
             });
         }
@@ -156,7 +156,7 @@ const loginUser = async (req: Request, res: Response) => {
 
         if (!isPasswordValid) {
             return sendError(res, {
-                code: "UNAUTHORIZED",
+                statusCode: 401,
                 message: "Invalid email or password",
             });
         }
@@ -202,7 +202,7 @@ const loginUser = async (req: Request, res: Response) => {
         const errorMessage =
             error instanceof Error ? error.message : "Something went wrong";
         return sendError(res, {
-            code: "INTERNAL_ERROR",
+            statusCode: 500,
             message: errorMessage,
         });
     }
@@ -214,7 +214,7 @@ const googleLogin = async (req: Request, res: Response) => {
 
         if (!idToken) {
             return sendError(res, {
-                code: "BAD_REQUEST",
+                statusCode: 400,
                 message: "Invalid Token ID"
             });
         }
@@ -237,7 +237,7 @@ const googleLogin = async (req: Request, res: Response) => {
             // Edge case: Reject soft-deleted users
             if (existUser.user.isDeleted) {
                 return sendError(res, {
-                    code: "FORBIDDEN",
+                    statusCode: 403,
                     message: "This account has been deactivated",
                 });
             }
@@ -363,7 +363,7 @@ const googleLogin = async (req: Request, res: Response) => {
         const errorMessage =
             error instanceof Error ? error.message : "Something went wrong";
         return sendError(res, {
-            code: "INTERNAL_ERROR",
+            statusCode: 500,
             message: errorMessage,
         });
     }
@@ -387,7 +387,7 @@ const generateNewAccessToken = async (req: Request, res: Response) => {
 
         if (!userToken) {
             return sendError(res, {
-                code: "UNAUTHORIZED",
+                statusCode: 401,
                 message: "Please Login",
             });
         }
@@ -409,7 +409,7 @@ const generateNewAccessToken = async (req: Request, res: Response) => {
         const errorMessage =
             error instanceof Error ? error.message : "Something went wrong";
         return sendError(res, {
-            code: "INTERNAL_ERROR",
+            statusCode: 500,
             message: errorMessage,
         });
     }
@@ -420,7 +420,7 @@ const onboardUser = async (req: Request, res: Response) => {
         const userId = req.user?.id;
         if (!userId) {
             return sendError(res, {
-                code: "UNAUTHORIZED",
+                statusCode: 401,
                 message: "Unauthorized",
             });
         }
@@ -493,7 +493,7 @@ const onboardUser = async (req: Request, res: Response) => {
             error instanceof Error ? error.message : "Something went wrong";
         console.log(error)
         return sendError(res, {
-            code: "INTERNAL_ERROR",
+            statusCode: 500,
             message: errorMessage,
         });
     }
@@ -505,7 +505,7 @@ const logout = async (req: Request, res: Response) => {
 
         if (!userId) {
             return sendError(res, {
-                code: "UNAUTHORIZED",
+                statusCode: 401,
                 message: "Unauthorized",
             });
         }

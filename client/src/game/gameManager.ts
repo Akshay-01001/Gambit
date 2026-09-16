@@ -28,7 +28,6 @@ class GameManager {
     private handleServerMessage(data: ServerMessage) {
         switch (data.type) {
             case SocketEvents.MATCH_CREATED: {
-                console.log(data, " =========> MATCH CREATED");
                 const { blackPlayer, whitePlayer, ...game } = data.game;
                 store.dispatch(setGame({
                     ...game,
@@ -47,7 +46,7 @@ class GameManager {
                 const { blackPlayer, whitePlayer, ...game } = data.game_state;
                 store.dispatch(setGame({
                     ...game,
-                    status: game.status.toLowerCase(),
+                    status: game.status?.toLowerCase(),
                     players: {
                         black: blackPlayer || null,
                         white: whitePlayer || null,

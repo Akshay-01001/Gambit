@@ -73,7 +73,7 @@ const sendOtp = async (req: Request, res: Response) => {
         const errorMessage =
             error instanceof Error ? error.message : "Something went wrong";
         return sendError(res, {
-            code: "INTERNAL_ERROR",
+            statusCode: 500,
             message: errorMessage,
         });
     }
@@ -121,7 +121,7 @@ const verifyOtp = async (req: Request, res: Response) => {
         const errorMessage =
             error instanceof Error ? error.message : "Something went wrong";
         return sendError(res, {
-            code: "INTERNAL_ERROR",
+            statusCode: 500,
             message: errorMessage,
         });
     }

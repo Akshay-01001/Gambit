@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useState } from 'react'
+import React, { createContext, useCallback, useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux';
 import { setUser, type UserState } from '../features/user.slice'
 import { getUserDetails } from '../utils/apiFunctions';
@@ -31,14 +31,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [isEmailVerified, setIsEmailVerified] = useState(false);
     const dispatch = useDispatch();
 
-    const fetchUserDetails = async () => {
+    const fetchUserDetails = useCallback(async () => {
         setIsLoading(true);
         try {
             const res = await getUserDetails<UserState>('/api/auth/me');
             if (res.data.success) {
                 setIsLoggedIn(true);
                 setIsOnboarded(res.data?.data?.isCompletedOnboarding || false);
-                setIsEmailVerified(res?.data?.data?.isVerified)
+                setIsEmailVerified(res?.data?.data?.isVerified || false)
                 if (res.data.data) {
                     dispatch(setUser(res.data?.data));
                 }
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } finally {
             setIsLoading(false);
         }
-    }
+    }, [dispatch]);
 
     useEffect(() => {
         const timeOutId = setTimeout(() => {
@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return () => {
             clearTimeout(timeOutId);
         };
-    }, []);
+    }, [fetchUserDetails]);
 
     const value = {
         isLoading,
@@ -71,9 +71,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     return (
-        <AuthContext.Provider value={value}>
+        <AuthContext value={value}>
             {children}
-        </AuthContext.Provider>
+        </AuthContext>
     )
 }
 

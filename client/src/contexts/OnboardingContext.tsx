@@ -121,9 +121,9 @@ export const OnboardingProvider = ({ children }: { children: React.ReactNode }) 
     };
 
     return (
-        <OnboardingContext.Provider value={value}>
+        <OnboardingContext value={value}>
             {children}
-        </OnboardingContext.Provider>
+        </OnboardingContext>
     );
 };
 

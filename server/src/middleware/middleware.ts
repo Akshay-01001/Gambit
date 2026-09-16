@@ -9,7 +9,7 @@ export const verifyAccessToken = (req: Request, res: Response, next: NextFunctio
         req.user = { id: decoded.userId };
         next();
     } catch (error) {
-        sendError(res, { code: "UNAUTHORIZED", message: "Invalid or expired token" });
+        sendError(res, { statusCode: 401, message: "Invalid or expired token" });
         return;
     }
 };
@@ -21,7 +21,7 @@ export const verifyRefreshToken = (req: Request, res: Response, next: NextFuncti
         req.user = { id: decoded.userId };
         next();
     } catch (error) {
-        sendError(res, { code: "UNAUTHORIZED", message: "Invalid or expired refresh token" });
+        sendError(res, { statusCode: 401, message: "Invalid or expired refresh token" });
         return;
     }
 };

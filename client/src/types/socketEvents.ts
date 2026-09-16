@@ -1,9 +1,5 @@
-/**
- * Centralized socket event names and typed payloads.
- * ⚠️ Keep in sync with: server/src/types/socketEvents.ts
- */
+import type { GameResult, GameStatus } from "./inex";
 
-// ─── Event Names ─────────────────────────────────────────
 
 export const SocketEvents = {
     // Client → Server
@@ -31,8 +27,8 @@ export interface GameData {
     whitePlayerId: string | null;
     blackPlayerId: string | null;
     gameType: string;
-    status: string;
-    result: string | null;
+    status: GameStatus;
+    result: GameResult;
     endReason: string | null;
     timeControl: number;
     whiteTimeLeft: number;

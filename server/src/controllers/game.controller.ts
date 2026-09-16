@@ -9,7 +9,7 @@ const getUserRunningGame = async (req: Request, res: Response) => {
 
         if (!userId) {
             sendError(res, {
-                code: "UNAUTHORIZED",
+                statusCode: 401,
                 message: "Unauthorized",
             });
         }
@@ -43,19 +43,19 @@ const getUserRunningGame = async (req: Request, res: Response) => {
         const errorMessage =
             error instanceof Error ? error.message : "Something went wrong";
         return sendError(res, {
-            code: "INTERNAL_ERROR",
+            statusCode: 500,
             message: errorMessage,
         });
     }
 }
 
-const getUserPlayerGames = async(req: Request, res: Response) => {
+const getUserPlayerGames = async (req: Request, res: Response) => {
     try {
         const userId = req?.user?.id;
 
         if (!userId) {
             return sendError(res, {
-                code: "UNAUTHORIZED",
+                statusCode: 401,
                 message: "Unauthorized",
             });
         }
@@ -115,7 +115,7 @@ const getUserPlayerGames = async(req: Request, res: Response) => {
         const errorMessage =
             error instanceof Error ? error.message : "Something went wrong";
         return sendError(res, {
-            code: "INTERNAL_ERROR",
+            statusCode: 500,
             message: errorMessage,
         });
     }
