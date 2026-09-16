@@ -1,5 +1,12 @@
 import { Square } from 'chess.js';
 import { AuthenticatedWebSocket } from '../socket/socket';
+import {
+    GameEndReason,
+    GameResult,
+    GameStatus,
+    GameTurn,
+    GameType,
+} from '../generated/prisma/enums';
 
 export interface ApiSuccessBody<T = unknown> {
     success: true;
@@ -19,42 +26,6 @@ export interface TokenPayload {
     userId: string;
     email: string;
 }
-
-export type GameType = {
-    BULLET: 'BULLET';
-    BLITZ: 'BLITZ';
-    RAPID: 'RAPID';
-};
-
-export type GameStatus = {
-    WAITING: 'WAITING';
-    PLAYING: 'PLAYING';
-    COMPLETED: 'COMPLETED';
-    ABANDONED: 'ABANDONED';
-};
-
-export type GameResult = {
-    WHITE_WIN: 'WHITE_WIN';
-    BLACK_WIN: 'BLACK_WIN';
-    DRAW: 'DRAW';
-};
-
-export type GameEndReason = {
-    CHECKMATE: 'CHECKMATE';
-    STALEMATE: 'STALEMATE';
-    RESIGNATION: 'RESIGNATION';
-    TIMEOUT: 'TIMEOUT';
-    DRAW_AGREEMENT: 'DRAW_AGREEMENT';
-    INSUFFICIENT_MATERIAL: 'INSUFFICIENT_MATERIAL';
-    THREEFOLD_REPETITION: 'THREEFOLD_REPETITION';
-    FIFTY_MOVE_RULE: 'FIFTY_MOVE_RULE';
-    ABANDONMENT: 'ABANDONMENT';
-};
-
-export type GameTurn = {
-    b: 'b';
-    w: 'w';
-};
 
 export type ChessUIStatus =
     | 'waiting'
