@@ -1,11 +1,11 @@
-import { createSlice } from "@reduxjs/toolkit";
-import type { GameData } from "../types/socketEvents";
+import { createSlice } from '@reduxjs/toolkit';
+import type { GameData } from '../types/socketEvents';
 
 const initialState = {
     pages: {} as Record<number, GameData[]>,
     totalPages: 0,
     currentPage: 1,
-    loading: false
+    loading: false,
 };
 
 export const gameSlice = createSlice({
@@ -22,8 +22,8 @@ export const gameSlice = createSlice({
         },
         setCurrentPage(state, action) {
             state.currentPage = action.payload;
-        }
-    }
+        },
+    },
 });
 
 export const { setLoading, setPageData, setCurrentPage } = gameSlice.actions;

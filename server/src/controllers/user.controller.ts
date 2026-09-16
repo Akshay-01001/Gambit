@@ -1,7 +1,7 @@
-import { Request, Response } from "express";
-import { sendError, sendSuccess } from "../utils/apiResponse";
-import { prisma } from "../lib/prisma";
-import { uploadImageToCloudinary } from "../utils/cloudinary";
+import { Request, Response } from 'express';
+import { sendError, sendSuccess } from '../utils/apiResponse';
+import { prisma } from '../lib/prisma';
+import { uploadImageToCloudinary } from '../utils/cloudinary';
 
 const getUserDetails = async (req: Request, res: Response) => {
     try {
@@ -10,35 +10,35 @@ const getUserDetails = async (req: Request, res: Response) => {
         if (!userId) {
             return sendError(res, {
                 statusCode: 401,
-                message: "Unathorized"
+                message: 'Unathorized',
             });
         }
 
         const userDetails = await prisma.user.findFirst({
             where: {
                 id: userId,
-                isDeleted: false
+                isDeleted: false,
             },
             include: {
                 auth: {
                     select: {
-                        isVerified: true
-                    }
+                        isVerified: true,
+                    },
                 },
                 chessProfile: true,
                 _count: {
                     select: {
                         whiteGames: true,
-                        blackGames: true
-                    }
-                }
-            }
+                        blackGames: true,
+                    },
+                },
+            },
         });
 
         if (!userDetails) {
             return sendError(res, {
                 statusCode: 401,
-                message: "Unathorized"
+                message: 'Unathorized',
             });
         }
 
@@ -48,18 +48,17 @@ const getUserDetails = async (req: Request, res: Response) => {
             ...user,
             totalWhiteGames: _count.whiteGames,
             totalBlackGames: _count.blackGames,
-            isVerified: auth?.isVerified
-        }
+            isVerified: auth?.isVerified,
+        };
 
         return sendSuccess(res, {
             statusCode: 200,
-            message: "User details fetched succcessfully",
-            data: result
+            message: 'User details fetched succcessfully',
+            data: result,
         });
-
     } catch (error) {
         const errorMessage =
-            error instanceof Error ? error.message : "Something went wrong";
+            error instanceof Error ? error.message : 'Something went wrong';
         return sendError(res, {
             statusCode: 500,
             message: errorMessage,
@@ -73,7 +72,7 @@ const updateProfile = async (req: Request, res: Response) => {
         if (!userId) {
             return sendError(res, {
                 statusCode: 401,
-                message: "Unauthorized",
+                message: 'Unauthorized',
             });
         }
 
@@ -83,7 +82,10 @@ const updateProfile = async (req: Request, res: Response) => {
         let avatarPublicId = undefined;
 
         if (req.file) {
-            const data = await uploadImageToCloudinary(req.file.buffer, req.file.mimetype);
+            const data = await uploadImageToCloudinary(
+                req.file.buffer,
+                req.file.mimetype,
+            );
             avatarUrl = data.url;
             avatarPublicId = data.publicId;
         }
@@ -92,14 +94,14 @@ const updateProfile = async (req: Request, res: Response) => {
             const existUsername = await prisma.user.findFirst({
                 where: {
                     username,
-                    id: { not: userId }
-                }
+                    id: { not: userId },
+                },
             });
 
             if (existUsername) {
                 return sendError(res, {
                     statusCode: 400,
-                    message: "Username already taken"
+                    message: 'Username already taken',
                 });
             }
         }
@@ -120,9 +122,9 @@ const updateProfile = async (req: Request, res: Response) => {
                 auth: { select: { isVerified: true } },
                 chessProfile: true,
                 _count: {
-                    select: { whiteGames: true, blackGames: true }
-                }
-            }
+                    select: { whiteGames: true, blackGames: true },
+                },
+            },
         });
 
         const { auth, _count, ...user } = updatedUser;
@@ -130,17 +132,17 @@ const updateProfile = async (req: Request, res: Response) => {
             ...user,
             totalWhiteGames: _count.whiteGames,
             totalBlackGames: _count.blackGames,
-            isVerified: auth?.isVerified
-        }
+            isVerified: auth?.isVerified,
+        };
 
         return sendSuccess(res, {
             statusCode: 200,
-            message: "Profile updated successfully",
-            data: result
+            message: 'Profile updated successfully',
+            data: result,
         });
-
     } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Something went wrong";
+        const errorMessage =
+            error instanceof Error ? error.message : 'Something went wrong';
         return sendError(res, {
             statusCode: 500,
             message: errorMessage,
@@ -148,7 +150,4 @@ const updateProfile = async (req: Request, res: Response) => {
     }
 };
 
-export {
-    getUserDetails,
-    updateProfile
-};
+export { getUserDetails, updateProfile };

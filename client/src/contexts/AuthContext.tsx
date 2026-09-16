@@ -1,6 +1,6 @@
-import React, { createContext, useCallback, useEffect, useState } from 'react'
+import React, { createContext, useCallback, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { setUser, type UserState } from '../features/user.slice'
+import { setUser, type UserState } from '../features/user.slice';
 import { getUserDetails } from '../utils/apiFunctions';
 
 type AuthContextType = {
@@ -9,8 +9,8 @@ type AuthContextType = {
     isOnboarded: boolean;
     isEmailVerified: boolean;
     fetchUserDetails: () => Promise<void>;
-    setIsLoggedIn: (value: boolean) => void
-    setIsEmailVerified: (value: boolean) => void
+    setIsLoggedIn: (value: boolean) => void;
+    setIsEmailVerified: (value: boolean) => void;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -18,13 +18,12 @@ const AuthContext = createContext<AuthContextType>({
     isLoggedIn: false,
     isOnboarded: false,
     isEmailVerified: false,
-    fetchUserDetails: async () => { },
-    setIsLoggedIn: () => { },
-    setIsEmailVerified: () => { }
+    fetchUserDetails: async () => {},
+    setIsLoggedIn: () => {},
+    setIsEmailVerified: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isOnboarded, setIsOnboarded] = useState(false);
@@ -38,13 +37,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (res.data.success) {
                 setIsLoggedIn(true);
                 setIsOnboarded(res.data?.data?.isCompletedOnboarding || false);
-                setIsEmailVerified(res?.data?.data?.isVerified || false)
+                setIsEmailVerified(res?.data?.data?.isVerified || false);
                 if (res.data.data) {
                     dispatch(setUser(res.data?.data));
                 }
             }
         } catch (error) {
-            console.error(error)
+            console.error(error);
         } finally {
             setIsLoading(false);
         }
@@ -67,14 +66,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isEmailVerified,
         fetchUserDetails,
         setIsLoggedIn,
-        setIsEmailVerified
-    }
+        setIsEmailVerified,
+    };
 
-    return (
-        <AuthContext value={value}>
-            {children}
-        </AuthContext>
-    )
-}
+    return <AuthContext value={value}>{children}</AuthContext>;
+};
 
 export default AuthContext;

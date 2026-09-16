@@ -1,6 +1,6 @@
-import { getUserDetails } from "../utils/apiFunctions";
-import type { UserState } from "../features/user.slice";
-import type { ServerMessage } from "../types/socketEvents";
+import { getUserDetails } from '../utils/apiFunctions';
+import type { UserState } from '../features/user.slice';
+import type { ServerMessage } from '../types/socketEvents';
 
 export let ws: WebSocket;
 let reconnectTimeout: ReturnType<typeof setTimeout>;
@@ -11,10 +11,12 @@ let pendingMessages: string[] = [];
 let isConnecting = false;
 
 const MAX_RECONNECT_ATTEMPTS = 10;
-const BASE_RECONNECT_DELAY = 2000;   // 2 seconds
-const MAX_RECONNECT_DELAY = 30000;   // 30 seconds
+const BASE_RECONNECT_DELAY = 2000; // 2 seconds
+const MAX_RECONNECT_DELAY = 30000; // 30 seconds
 
-export const setSocketMessageCallback = (callback: (data: ServerMessage) => void) => {
+export const setSocketMessageCallback = (
+    callback: (data: ServerMessage) => void,
+) => {
     messageCallback = callback;
 };
 
@@ -52,7 +54,7 @@ export const connectSocket = () => {
     };
 
     ws.onerror = (err) => {
-        console.error("WebSocket error:", err);
+        console.error('WebSocket error:', err);
         isConnecting = false;
     };
 
@@ -61,14 +63,17 @@ export const connectSocket = () => {
         clearTimeout(reconnectTimeout);
 
         if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-            console.error("Max WebSocket reconnect attempts reached. Giving up.");
+            console.error(
+                'Max WebSocket reconnect attempts reached. Giving up.',
+            );
             return;
         }
 
         // Exponential backoff with jitter: 2s → 4s → 8s → ... → 30s max
         const delay = Math.min(
-            BASE_RECONNECT_DELAY * Math.pow(2, reconnectAttempts) + Math.random() * 1000,
-            MAX_RECONNECT_DELAY
+            BASE_RECONNECT_DELAY * Math.pow(2, reconnectAttempts) +
+                Math.random() * 1000,
+            MAX_RECONNECT_DELAY,
         );
         reconnectAttempts++;
 
@@ -78,7 +83,10 @@ export const connectSocket = () => {
                 await getUserDetails<UserState>('/api/auth/me');
                 connectSocket();
             } catch (error) {
-                console.error("Failed to refresh token before WS reconnect:", error);
+                console.error(
+                    'Failed to refresh token before WS reconnect:',
+                    error,
+                );
             }
         }, delay);
     };
@@ -89,7 +97,7 @@ export const connectSocket = () => {
                 const data = JSON.parse(event.data) as ServerMessage;
                 messageCallback(data);
             } catch (e) {
-                console.error("Failed to parse socket message", e);
+                console.error('Failed to parse socket message', e);
             }
         }
     };

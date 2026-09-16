@@ -1,12 +1,21 @@
-import { IGameManager, Player, Game } from "../types/types";
-import { AuthenticatedWebSocket } from "./socket";
-import { SocketEvents, type ServerMessage } from "../types/socketEvents";
-import { findMatch, handleRejoin, handleResign, makeMove, handleDrawAccept } from "./gameActions";
+import { IGameManager, Player, Game } from '../types/types';
+import { AuthenticatedWebSocket } from './socket';
+import { SocketEvents, type ServerMessage } from '../types/socketEvents';
+import {
+    findMatch,
+    handleRejoin,
+    handleResign,
+    makeMove,
+    handleDrawAccept,
+} from './gameActions';
 
 class GameManager implements IGameManager {
     private players: Map<string, Player>;
     private games: Map<string, Game>;
-    private waitingPlayers: Map<string, { game_type: string, game_time: number }>;
+    private waitingPlayers: Map<
+        string,
+        { game_type: string; game_time: number }
+    >;
     private rooms: Map<string, Set<AuthenticatedWebSocket>>;
     private turnTimers: Map<string, NodeJS.Timeout>;
 
@@ -44,7 +53,7 @@ class GameManager implements IGameManager {
                 ws.send(JSON.stringify(message));
             }
         } catch (error) {
-            console.error("Failed to send WebSocket message:", error);
+            console.error('Failed to send WebSocket message:', error);
         }
     }
 
@@ -52,17 +61,23 @@ class GameManager implements IGameManager {
         ws.on('message', (data: string) => {
             try {
                 const message = JSON.parse(data.toString());
-                console.log(message)
+                console.log(message);
 
                 if (!message || typeof message.type !== 'string') {
-                    this.safeSend(ws, { type: SocketEvents.ERROR, message: "Invalid message format" });
+                    this.safeSend(ws, {
+                        type: SocketEvents.ERROR,
+                        message: 'Invalid message format',
+                    });
                     return;
                 }
 
                 const userId = ws.user?.userId;
 
                 if (!userId) {
-                    this.safeSend(ws, { type: SocketEvents.ERROR, message: "Unauthorized: no user identity" });
+                    this.safeSend(ws, {
+                        type: SocketEvents.ERROR,
+                        message: 'Unauthorized: no user identity',
+                    });
                     return;
                 }
 
@@ -80,7 +95,12 @@ class GameManager implements IGameManager {
                         break;
                     }
                     case SocketEvents.MAKE_MOVE: {
-                        makeMove(ws, message?.payload?.from, message?.payload?.to, message?.payload?.promotion);
+                        makeMove(
+                            ws,
+                            message?.payload?.from,
+                            message?.payload?.to,
+                            message?.payload?.promotion,
+                        );
                         break;
                     }
                     case SocketEvents.OFFER_DRAW: {
@@ -96,13 +116,20 @@ class GameManager implements IGameManager {
                     }
                 }
             } catch (error) {
-                console.error("Invalid socket message format:", error);
-                this.safeSend(ws, { type: SocketEvents.ERROR, message: "Invalid message format" });
+                console.error('Invalid socket message format:', error);
+                this.safeSend(ws, {
+                    type: SocketEvents.ERROR,
+                    message: 'Invalid message format',
+                });
             }
         });
-    }
+    };
 
-    addPlayer(playerId: string, socketId: string, ws: AuthenticatedWebSocket): Player {
+    addPlayer(
+        playerId: string,
+        socketId: string,
+        ws: AuthenticatedWebSocket,
+    ): Player {
         const existingPlayer = this.players.get(playerId);
 
         if (existingPlayer) {
@@ -112,7 +139,7 @@ class GameManager implements IGameManager {
                 ...existingPlayer,
                 socketId,
                 ws,
-                disconnectedAt: null
+                disconnectedAt: null,
             };
 
             this.players.set(playerId, updatedPlayer);
@@ -134,7 +161,7 @@ class GameManager implements IGameManager {
             playerId,
             gameId: null,
             disconnectedAt: null,
-            ws
+            ws,
         };
 
         this.players.set(playerId, player);
@@ -158,13 +185,16 @@ class GameManager implements IGameManager {
 
                 this.broadcastToRoom(player.gameId, {
                     type: SocketEvents.PLAYER_DISCONNECTED,
-                    player_id: userId
+                    player_id: userId,
                 });
             }
         }
     }
 
-    addToWaiting(playerId: string, prefs: { game_type: string, game_time: number }) {
+    addToWaiting(
+        playerId: string,
+        prefs: { game_type: string; game_time: number },
+    ) {
         if (!this.waitingPlayers.has(playerId)) {
             this.waitingPlayers.set(playerId, prefs);
         }
@@ -210,8 +240,12 @@ class GameManager implements IGameManager {
         const game = this.games.get(gameId);
 
         if (game) {
-            const white = game.whitePlayerId ? this.players.get(game.whitePlayerId) : undefined;
-            const black = game.blackPlayerId ? this.players.get(game.blackPlayerId) : undefined;
+            const white = game.whitePlayerId
+                ? this.players.get(game.whitePlayerId)
+                : undefined;
+            const black = game.blackPlayerId
+                ? this.players.get(game.blackPlayerId)
+                : undefined;
 
             if (white) white.gameId = null;
             if (black) black.gameId = null;
@@ -237,7 +271,10 @@ class GameManager implements IGameManager {
 
     sendDrawRequest(userId: string, gameId: string) {
         const game = this.games.get(gameId);
-        const opponentId = game?.blackPlayerId === userId ? game?.whitePlayerId : game?.blackPlayerId;
+        const opponentId =
+            game?.blackPlayerId === userId
+                ? game?.whitePlayerId
+                : game?.blackPlayerId;
         if (!opponentId) {
             // handle error
             return;
@@ -245,10 +282,10 @@ class GameManager implements IGameManager {
         const player = this.players.get(opponentId);
         if (player && player.ws) {
             this.safeSend(player.ws, {
-                type: SocketEvents.DRAW_OFFERED
+                type: SocketEvents.DRAW_OFFERED,
             });
         }
     }
-};
+}
 
 export const gameManager = new GameManager();

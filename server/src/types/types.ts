@@ -1,49 +1,111 @@
-import { Square } from "chess.js"
-import { AuthenticatedWebSocket } from "../socket/socket"
-import type { GameType, GameStatus, GameResult, GameEndReason, GameTurn } from "../generated/prisma/enums"
+import { Square } from 'chess.js';
+import { AuthenticatedWebSocket } from '../socket/socket';
 
-export type ChessUIStatus = "waiting" | "playing" | "check" | "checkmate" | "stalemate"
-    | "draw" | "resigned" | "timeout" | "abandone"
+export interface ApiSuccessBody<T = unknown> {
+    success: true;
+    statusCode: number;
+    message: string;
+    data: T;
+}
 
-export type ChessUIResult = "1-0" | "0-1" | "1/2 - 1/2" | null
+export interface ApiErrorBody {
+    success: false;
+    statusCode: number;
+    message: string;
+    errors?: Record<string, string>[];
+}
+
+export interface TokenPayload {
+    userId: string;
+    email: string;
+}
+
+export type GameType = {
+    BULLET: 'BULLET';
+    BLITZ: 'BLITZ';
+    RAPID: 'RAPID';
+};
+
+export type GameStatus = {
+    WAITING: 'WAITING';
+    PLAYING: 'PLAYING';
+    COMPLETED: 'COMPLETED';
+    ABANDONED: 'ABANDONED';
+};
+
+export type GameResult = {
+    WHITE_WIN: 'WHITE_WIN';
+    BLACK_WIN: 'BLACK_WIN';
+    DRAW: 'DRAW';
+};
+
+export type GameEndReason = {
+    CHECKMATE: 'CHECKMATE';
+    STALEMATE: 'STALEMATE';
+    RESIGNATION: 'RESIGNATION';
+    TIMEOUT: 'TIMEOUT';
+    DRAW_AGREEMENT: 'DRAW_AGREEMENT';
+    INSUFFICIENT_MATERIAL: 'INSUFFICIENT_MATERIAL';
+    THREEFOLD_REPETITION: 'THREEFOLD_REPETITION';
+    FIFTY_MOVE_RULE: 'FIFTY_MOVE_RULE';
+    ABANDONMENT: 'ABANDONMENT';
+};
+
+export type GameTurn = {
+    b: 'b';
+    w: 'w';
+};
+
+export type ChessUIStatus =
+    | 'waiting'
+    | 'playing'
+    | 'check'
+    | 'checkmate'
+    | 'stalemate'
+    | 'draw'
+    | 'resigned'
+    | 'timeout'
+    | 'abandone';
+
+export type ChessUIResult = '1-0' | '0-1' | '1/2 - 1/2' | null;
 
 export interface ChessState {
-    gameId: string | null
-    fen: string
-    turn: GameTurn
-    selectedSquare: Square | null
-    legalMoves: string[]
+    gameId: string | null;
+    fen: string;
+    turn: GameTurn;
+    selectedSquare: Square | null;
+    legalMoves: string[];
     lastMove: {
-        from: Square,
-        to: Square,
-    } | null
-    status: ChessUIStatus
-    winner: GameTurn
-    result: ChessUIResult
+        from: Square;
+        to: Square;
+    } | null;
+    status: ChessUIStatus;
+    winner: GameTurn;
+    result: ChessUIResult;
     players: {
         black: {
-            username: string,
-            userId: string,
-            rating: number,
-            country: string
-        } | null,
+            username: string;
+            userId: string;
+            rating: number;
+            country: string;
+        } | null;
         white: {
-            username: string,
-            userId: string,
-            rating: number,
-            country: string
-        } | null,
+            username: string;
+            userId: string;
+            rating: number;
+            country: string;
+        } | null;
         clock: {
-            white: string,
-            black: string
-        },
+            white: string;
+            black: string;
+        };
         promotion: {
-            open: boolean,
-            from: Square | null,
-            to: Square | null,
-            color: GameTurn | null
-        }
-    }
+            open: boolean;
+            from: Square | null;
+            to: Square | null;
+            color: GameTurn | null;
+        };
+    };
 }
 
 export interface PlayerInfo {
@@ -55,11 +117,11 @@ export interface PlayerInfo {
 }
 
 export interface Player {
-    playerId: string
-    gameId: string | null
-    socketId: string | null
-    disconnectedAt?: number | null
-    ws: AuthenticatedWebSocket
+    playerId: string;
+    gameId: string | null;
+    socketId: string | null;
+    disconnectedAt?: number | null;
+    ws: AuthenticatedWebSocket;
 }
 
 export interface Game {
@@ -107,13 +169,20 @@ export interface EndGameData {
 }
 
 export interface IGameManager {
-    addPlayer: (playerId: string, socketId: string, ws: AuthenticatedWebSocket) => Player
-    removePlayerConnection: (playerId: string) => void
-    addToWaiting: (playerId: string, prefs: { game_type: string, game_time: number }) => void
-    removeFromWaiting: (playerId: string) => void
-    getGame: (gameId: string) => Game | undefined
-    getPlayerGame: (playerId: string) => Game | undefined
-    clearGame: (gameId: string) => void
-    setTurnTimer: (gameId: string, timer: NodeJS.Timeout) => void
-    clearTurnTimer: (gameId: string) => void
+    addPlayer: (
+        playerId: string,
+        socketId: string,
+        ws: AuthenticatedWebSocket,
+    ) => Player;
+    removePlayerConnection: (playerId: string) => void;
+    addToWaiting: (
+        playerId: string,
+        prefs: { game_type: string; game_time: number },
+    ) => void;
+    removeFromWaiting: (playerId: string) => void;
+    getGame: (gameId: string) => Game | undefined;
+    getPlayerGame: (playerId: string) => Game | undefined;
+    clearGame: (gameId: string) => void;
+    setTurnTimer: (gameId: string, timer: NodeJS.Timeout) => void;
+    clearTurnTimer: (gameId: string) => void;
 }

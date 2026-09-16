@@ -1,7 +1,15 @@
 import { setStatus, setGame } from '../features/chess.slice';
-import { setSocketMessageCallback, connectSocket, sendMessage } from '../socket/socket';
+import {
+    setSocketMessageCallback,
+    connectSocket,
+    sendMessage,
+} from '../socket/socket';
 import { store } from '../store/store';
-import { SocketEvents, type ServerMessage, type ClientMessage } from '../types/socketEvents';
+import {
+    SocketEvents,
+    type ServerMessage,
+    type ClientMessage,
+} from '../types/socketEvents';
 import { toast } from 'react-toastify';
 import React from 'react';
 import DrawOfferToast from '../components/Game/DrawOfferToast';
@@ -29,31 +37,53 @@ class GameManager {
         switch (data.type) {
             case SocketEvents.MATCH_CREATED: {
                 const { blackPlayer, whitePlayer, ...game } = data.game;
-                store.dispatch(setGame({
-                    ...game,
-                    status: "playing",
-                    players: {
-                        black: blackPlayer || null,
-                        white: whitePlayer || null,
-                        clock: store.getState().chess.players?.clock || { white: "10:00", black: "10:00" },
-                        promotion: store.getState().chess.players?.promotion || { open: false, from: null, to: null, color: null }
-                    }
-                }));
+                store.dispatch(
+                    setGame({
+                        ...game,
+                        status: 'playing',
+                        players: {
+                            black: blackPlayer || null,
+                            white: whitePlayer || null,
+                            clock: store.getState().chess.players?.clock || {
+                                white: '10:00',
+                                black: '10:00',
+                            },
+                            promotion: store.getState().chess.players
+                                ?.promotion || {
+                                open: false,
+                                from: null,
+                                to: null,
+                                color: null,
+                            },
+                        },
+                    }),
+                );
                 break;
             }
 
             case SocketEvents.GAME_STATE: {
                 const { blackPlayer, whitePlayer, ...game } = data.game_state;
-                store.dispatch(setGame({
-                    ...game,
-                    status: game.status?.toLowerCase(),
-                    players: {
-                        black: blackPlayer || null,
-                        white: whitePlayer || null,
-                        clock: store.getState().chess.players?.clock || { white: "10:00", black: "10:00" },
-                        promotion: store.getState().chess.players?.promotion || { open: false, from: null, to: null, color: null }
-                    }
-                }));
+                store.dispatch(
+                    setGame({
+                        ...game,
+                        status: game.status?.toLowerCase(),
+                        players: {
+                            black: blackPlayer || null,
+                            white: whitePlayer || null,
+                            clock: store.getState().chess.players?.clock || {
+                                white: '10:00',
+                                black: '10:00',
+                            },
+                            promotion: store.getState().chess.players
+                                ?.promotion || {
+                                open: false,
+                                from: null,
+                                to: null,
+                                color: null,
+                            },
+                        },
+                    }),
+                );
                 break;
             }
 
@@ -64,50 +94,60 @@ class GameManager {
 
             case SocketEvents.MOVE_MADE: {
                 const game = data.game_state;
-                store.dispatch(setGame({
-                    fen: game.fen,
-                    pgn: game.pgn,
-                    turn: game.turn,
-                    moveCount: game.moveCount,
-                    whiteTimeLeft: game.whiteTimeLeft,
-                    blackTimeLeft: game.blackTimeLeft,
-                    turnStartedAt: game.turnStartedAt,
-                    selectedSquare: null,
-                    legalMoves: [],
-                }));
+                store.dispatch(
+                    setGame({
+                        fen: game.fen,
+                        pgn: game.pgn,
+                        turn: game.turn,
+                        moveCount: game.moveCount,
+                        whiteTimeLeft: game.whiteTimeLeft,
+                        blackTimeLeft: game.blackTimeLeft,
+                        turnStartedAt: game.turnStartedAt,
+                        selectedSquare: null,
+                        legalMoves: [],
+                    }),
+                );
                 break;
             }
 
             case SocketEvents.GAME_OVER: {
                 const game = data.game_state;
-                const turn = game.fen.split(" ")[1] as "w" | "b";
-                store.dispatch(setGame({
-                    id: game.id,
-                    fen: game.fen,
-                    turn,
-                    status: game.status.toLowerCase(),
-                }));
+                const turn = game.fen.split(' ')[1] as 'w' | 'b';
+                store.dispatch(
+                    setGame({
+                        id: game.id,
+                        fen: game.fen,
+                        turn,
+                        status: game.status.toLowerCase(),
+                    }),
+                );
                 break;
             }
 
             case SocketEvents.ERROR:
-                console.error("Server error:", data.message);
+                console.error('Server error:', data.message);
                 break;
 
             case SocketEvents.DRAW_OFFERED:
-                toast(React.createElement(DrawOfferToast, { 
-                    onAccept: () => this.acceptDraw() 
-                }), {
-                    position: "top-center",
-                    autoClose: 60000,
-                    closeOnClick: false,
-                    draggable: false,
-                    theme: "dark"
-                });
+                toast(
+                    React.createElement(DrawOfferToast, {
+                        onAccept: () => this.acceptDraw(),
+                    }),
+                    {
+                        position: 'top-center',
+                        autoClose: 60000,
+                        closeOnClick: false,
+                        draggable: false,
+                        theme: 'dark',
+                    },
+                );
                 break;
 
             default:
-                console.warn("Unknown event type:", (data as Record<string, unknown>).type);
+                console.warn(
+                    'Unknown event type:',
+                    (data as Record<string, unknown>).type,
+                );
         }
     }
 
@@ -128,7 +168,7 @@ class GameManager {
     public reJoinGame(gameId: string) {
         this.sendEvent({
             type: SocketEvents.REJOIN_GAME,
-            gameId
+            gameId,
         });
     }
 
@@ -144,22 +184,22 @@ class GameManager {
         const payload = {
             from,
             to,
-            ...(promotion && { promotion })
+            ...(promotion && { promotion }),
         };
 
         this.sendEvent({
             type: SocketEvents.MAKE_MOVE,
-            payload
+            payload,
         });
     }
 
     public offerDraw() {
         const state = store.getState();
-        const gameId = state.chess.id
+        const gameId = state.chess.id;
         if (!gameId) {
             return;
         }
-        this.sendEvent({ type: SocketEvents.OFFER_DRAW, gameId })
+        this.sendEvent({ type: SocketEvents.OFFER_DRAW, gameId });
     }
 
     public acceptDraw() {

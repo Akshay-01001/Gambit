@@ -1,4 +1,4 @@
-import CountrySelect from '../CountrySelect'
+import CountrySelect from '../CountrySelect';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth';
 import OnboardingLayout from '../OnboardingLayout';
@@ -7,16 +7,23 @@ import { useOnboarding } from '../../../hooks/useOnboarding';
 
 const Step1 = () => {
     const { isOnboarded } = useAuth();
-    const { formData, handleChange, currentStep, setCurrentStep, errors, validateStep1 } = useOnboarding();
+    const {
+        formData,
+        handleChange,
+        currentStep,
+        setCurrentStep,
+        errors,
+        validateStep1,
+    } = useOnboarding();
 
     const handleNextClick = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
-        e.stopPropagation()
+        e.preventDefault();
+        e.stopPropagation();
         if (!validateStep1()) {
             return;
         }
         setCurrentStep(currentStep + 1);
-    }
+    };
 
     if (isOnboarded) {
         return <Navigate to="/" replace />;
@@ -24,42 +31,61 @@ const Step1 = () => {
 
     return (
         <OnboardingLayout currentStep={currentStep}>
-            <div className='mt-6'>
-                <h1 className='text-3xl font-display font-bold'>Tell us about you</h1>
-                <p className='mt-2 text-sm text-muted-foreground'>Pick a username and your country. This shows up next to your rating.</p>
+            <div className="mt-6">
+                <h1 className="text-3xl font-display font-bold">
+                    Tell us about you
+                </h1>
+                <p className="mt-2 text-sm text-muted-foreground">
+                    Pick a username and your country. This shows up next to your
+                    rating.
+                </p>
             </div>
-            <div className='mt-10'>
-                <form onSubmit={handleNextClick} className='space-y-6'>
-                    <div className='flex flex-col space-y-2'>
+            <div className="mt-10">
+                <form onSubmit={handleNextClick} className="space-y-6">
+                    <div className="flex flex-col space-y-2">
                         <label htmlFor="username">Username</label>
                         <input
                             type="text"
-                            placeholder='e.g knight_rider'
+                            placeholder="e.g knight_rider"
                             value={formData.username}
                             name="username"
                             id="username"
                             onChange={handleChange}
-                            className='flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm'
+                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                         />
-                        <p className='mt-1 text-xs text-muted-foreground'>3–20 chars · letters, numbers, underscores</p>
-                        {
-                            errors.username &&
-                            <div className='text-sm text-red-500'>{errors.username}</div>
-                        }
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            3–20 chars · letters, numbers, underscores
+                        </p>
+                        {errors.username && (
+                            <div className="text-sm text-red-500">
+                                {errors.username}
+                            </div>
+                        )}
                     </div>
-                    <div className='flex flex-col space-y-2'>
+                    <div className="flex flex-col space-y-2">
                         <label htmlFor="country">Country</label>
-                        <CountrySelect value={formData.country} onChange={(value: string) => handleChange({ target: { name: 'country', value } })} />
-                        {
-                            errors.country &&
-                            <div className='text-sm text-red-500'>{errors.country}</div>
-                        }
+                        <CountrySelect
+                            value={formData.country}
+                            onChange={(value: string) =>
+                                handleChange({
+                                    target: { name: 'country', value },
+                                })
+                            }
+                        />
+                        {errors.country && (
+                            <div className="text-sm text-red-500">
+                                {errors.country}
+                            </div>
+                        )}
                     </div>
-                    <div className='flex flex-col space-y-3'>
+                    <div className="flex flex-col space-y-3">
                         <label>Gender</label>
-                        <div className='flex items-center gap-6'>
+                        <div className="flex items-center gap-6">
                             {['MALE', 'FEMALE', 'OTHER'].map((g) => (
-                                <label key={g} className="flex items-center space-x-2 cursor-pointer">
+                                <label
+                                    key={g}
+                                    className="flex items-center space-x-2 cursor-pointer"
+                                >
                                     <input
                                         type="radio"
                                         name="gender"
@@ -68,16 +94,19 @@ const Step1 = () => {
                                         onChange={handleChange}
                                         className="h-4 w-4 border-input bg-transparent text-primary focus-visible:ring-1 focus-visible:ring-ring accent-primary"
                                     />
-                                    <span className="text-sm font-medium leading-none">{g.charAt(0) + g.slice(1).toLowerCase()}</span>
+                                    <span className="text-sm font-medium leading-none">
+                                        {g.charAt(0) + g.slice(1).toLowerCase()}
+                                    </span>
                                 </label>
                             ))}
                         </div>
-                        {
-                            errors.gender &&
-                            <div className='text-sm text-red-500'>{errors.gender}</div>
-                        }
+                        {errors.gender && (
+                            <div className="text-sm text-red-500">
+                                {errors.gender}
+                            </div>
+                        )}
                     </div>
-                    <div className='mt-8'>
+                    <div className="mt-8">
                         <button
                             type="submit"
                             className="w-full bg-primary text-primary-foreground h-10 px-4 py-2 rounded-md font-medium transition-colors hover:bg-primary/90 cursor-pointer"
@@ -88,7 +117,7 @@ const Step1 = () => {
                 </form>
             </div>
         </OnboardingLayout>
-    )
-}
+    );
+};
 
 export default Step1;

@@ -11,12 +11,12 @@ const initialState: ChessState = {
     whiteTimeLeft: null,
     blackTimeLeft: null,
     turnStartedAt: null,
-    fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-    pgn: "",
+    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+    pgn: '',
     moveCount: 0,
     createdAt: null,
     updatedAt: null,
-    turn: "w",
+    turn: 'w',
     selectedSquare: null,
     legalMoves: [],
     lastMove: null,
@@ -28,19 +28,19 @@ const initialState: ChessState = {
         black: null,
         white: null,
         clock: {
-            white: "",
-            black: ""
+            white: '',
+            black: '',
         },
         promotion: {
             open: false,
             from: null,
             to: null,
-            color: null
+            color: null,
         },
     },
     gameOverModalOpen: false,
-    showDrawOfferNotification: false
-}
+    showDrawOfferNotification: false,
+};
 
 export const chessSlice = createSlice({
     name: 'chess',
@@ -58,7 +58,10 @@ export const chessSlice = createSlice({
         setLegalMoves(state, action: PayloadAction<Square[]>) {
             state.legalMoves = action.payload;
         },
-        setLastMove(state, action: PayloadAction<{ from: Square, to: Square }>) {
+        setLastMove(
+            state,
+            action: PayloadAction<{ from: Square; to: Square }>,
+        ) {
             state.lastMove = action.payload;
         },
         clearLastMove(state) {
@@ -67,7 +70,7 @@ export const chessSlice = createSlice({
         setStatus(state, action: PayloadAction<GameStatus>) {
             state.status = action.payload;
         },
-        setWinner(state, action: PayloadAction<"b" | "w">) {
+        setWinner(state, action: PayloadAction<'b' | 'w'>) {
             state.winner = action.payload;
         },
         setResult(state, action: PayloadAction<GameResult>) {
@@ -76,15 +79,22 @@ export const chessSlice = createSlice({
         setGameOverModal(state, acion: PayloadAction<boolean>) {
             state.gameOverModalOpen = acion.payload;
         },
-        setTurn(state, acion: PayloadAction<"b" | "w">) {
+        setTurn(state, acion: PayloadAction<'b' | 'w'>) {
             state.turn = acion.payload;
         },
-        setPromotion(state, action: PayloadAction<{ from: Square; to: Square; color: "b" | "w" }>) {
+        setPromotion(
+            state,
+            action: PayloadAction<{
+                from: Square;
+                to: Square;
+                color: 'b' | 'w';
+            }>,
+        ) {
             state.players.promotion = {
                 open: true,
                 from: action.payload.from,
                 to: action.payload.to,
-                color: action.payload.color
+                color: action.payload.color,
             };
         },
         clearPromotion(state) {
@@ -92,16 +102,16 @@ export const chessSlice = createSlice({
                 open: false,
                 from: null,
                 to: null,
-                color: null
+                color: null,
             };
         },
         setGame(state, acion: PayloadAction<Partial<ChessState>>) {
             return {
                 ...state,
-                ...acion.payload
-            }
-        }
-    }
+                ...acion.payload,
+            };
+        },
+    },
 });
 
 export const {
@@ -118,7 +128,7 @@ export const {
     clearSelectedSquare,
     setTurn,
     setPromotion,
-    clearPromotion
+    clearPromotion,
 } = chessSlice.actions;
 
 export default chessSlice.reducer;

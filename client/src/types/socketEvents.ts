@@ -1,23 +1,22 @@
-import type { GameResult, GameStatus } from "./inex";
-
+import type { GameResult, GameStatus } from './inex';
 
 export const SocketEvents = {
     // Client → Server
-    FIND_GAME: "FIND_GAME",
-    REJOIN_GAME: "REJOIN_GAME",
-    MAKE_MOVE: "MAKE_MOVE",
-    RESIGN_GAME: "RESIGN_GAME",
-    OFFER_DRAW: "OFFER_DRAW",
-    ACCEPT_DRAW: "ACCEPT_DRAW",
+    FIND_GAME: 'FIND_GAME',
+    REJOIN_GAME: 'REJOIN_GAME',
+    MAKE_MOVE: 'MAKE_MOVE',
+    RESIGN_GAME: 'RESIGN_GAME',
+    OFFER_DRAW: 'OFFER_DRAW',
+    ACCEPT_DRAW: 'ACCEPT_DRAW',
 
     // Server → Client
-    MATCH_CREATED: "MATCH_CREATED",
-    GAME_STATE: "GAME_STATE",
-    NO_MATCH_FOUND: "NO_MATCH_FOUND",
-    MOVE_MADE: "MOVE_MADE",
-    GAME_OVER: "GAME_OVER",
-    ERROR: "ERROR",
-    DRAW_OFFERED: "DRAW_OFFERED",
+    MATCH_CREATED: 'MATCH_CREATED',
+    GAME_STATE: 'GAME_STATE',
+    NO_MATCH_FOUND: 'NO_MATCH_FOUND',
+    MOVE_MADE: 'MOVE_MADE',
+    GAME_OVER: 'GAME_OVER',
+    ERROR: 'ERROR',
+    DRAW_OFFERED: 'DRAW_OFFERED',
 } as const;
 
 // ─── Game Data (wire format — matches Prisma Game schema) ─
@@ -33,7 +32,7 @@ export interface GameData {
     timeControl: number;
     whiteTimeLeft: number;
     blackTimeLeft: number;
-    turn: "w" | "b";
+    turn: 'w' | 'b';
     fen: string;
     pgn: string;
     moveCount: number;
@@ -59,9 +58,15 @@ export interface GameData {
 // ─── Client → Server Payloads ────────────────────────────
 
 export type ClientMessage =
-    | { type: typeof SocketEvents.FIND_GAME; payload: { game_type: string, game_time: number } }
+    | {
+          type: typeof SocketEvents.FIND_GAME;
+          payload: { game_type: string; game_time: number };
+      }
     | { type: typeof SocketEvents.REJOIN_GAME; gameId: string }
-    | { type: typeof SocketEvents.MAKE_MOVE; payload: { from: string; to: string; promotion?: string } }
+    | {
+          type: typeof SocketEvents.MAKE_MOVE;
+          payload: { from: string; to: string; promotion?: string };
+      }
     | { type: typeof SocketEvents.RESIGN_GAME; gameId: string }
     | { type: typeof SocketEvents.OFFER_DRAW; gameId: string }
     | { type: typeof SocketEvents.ACCEPT_DRAW; gameId: string };
@@ -69,7 +74,11 @@ export type ClientMessage =
 // ─── Server → Client Payloads ────────────────────────────
 
 export type ServerMessage =
-    | { type: typeof SocketEvents.MATCH_CREATED; gameId: string; game: GameData }
+    | {
+          type: typeof SocketEvents.MATCH_CREATED;
+          gameId: string;
+          game: GameData;
+      }
     | { type: typeof SocketEvents.GAME_STATE; game_state: GameData }
     | { type: typeof SocketEvents.NO_MATCH_FOUND }
     | { type: typeof SocketEvents.MOVE_MADE; game_state: GameData }

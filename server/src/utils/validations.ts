@@ -1,115 +1,101 @@
-import Joi from "joi";
+import Joi from 'joi';
 
 export const registerSchema = Joi.object({
-    email: Joi.string()
-        .email()
-        .trim()
-        .lowercase()
-        .required()
-        .messages({
-            "string.empty": "Email is required",
-            "string.email": "Please enter a valid email",
-            "any.required": "Email is required",
-        }),
+    email: Joi.string().email().trim().lowercase().required().messages({
+        'string.empty': 'Email is required',
+        'string.email': 'Please enter a valid email',
+        'any.required': 'Email is required',
+    }),
     password: Joi.string()
         .min(8)
         .max(32)
         .pattern(
-            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#()_\-+=])[A-Za-z\d@$!%*?&^#()_\-+=]+$/
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^#()_\-+=])[A-Za-z\d@$!%*?&^#()_\-+=]+$/,
         )
         .required()
         .messages({
-            "string.empty": "Password is required",
-            "string.min": "Password must be at least 8 characters",
-            "string.max": "Password cannot exceed 32 characters",
-            "string.pattern.base":
-                "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
-            "any.required": "Password is required",
-        })
+            'string.empty': 'Password is required',
+            'string.min': 'Password must be at least 8 characters',
+            'string.max': 'Password cannot exceed 32 characters',
+            'string.pattern.base':
+                'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+            'any.required': 'Password is required',
+        }),
 });
 
 export const loginSchema = Joi.object({
-    email: Joi.string()
-        .email()
-        .trim()
-        .lowercase()
-        .required()
-        .messages({
-            "string.empty": "Email is required",
-            "string.email": "Please enter a valid email",
-            "any.required": "Email is required",
-        }),
-    password: Joi.string()
-        .required()
-        .messages({
-            "string.empty": "Password is required",
-            "any.required": "Password is required",
-        })
+    email: Joi.string().email().trim().lowercase().required().messages({
+        'string.empty': 'Email is required',
+        'string.email': 'Please enter a valid email',
+        'any.required': 'Email is required',
+    }),
+    password: Joi.string().required().messages({
+        'string.empty': 'Password is required',
+        'any.required': 'Password is required',
+    }),
 });
 
 export const generateOtpSchema = Joi.object({
-    email: Joi.string()
-        .email()
-        .trim()
-        .lowercase()
-        .required()
-        .messages({
-            "string.empty": "Email is required",
-            "string.email": "Please enter a valid email",
-            "any.required": "Email is required",
-        }),
+    email: Joi.string().email().trim().lowercase().required().messages({
+        'string.empty': 'Email is required',
+        'string.email': 'Please enter a valid email',
+        'any.required': 'Email is required',
+    }),
     purpose: Joi.string()
-        .valid("register", "forgot_password", "change_email")
+        .valid('register', 'forgot_password', 'change_email')
         .required()
         .messages({
-            "any.only": "Purpose must be one of: register, forgot_password, change_email",
-            "any.required": "Purpose is required",
-        })
+            'any.only':
+                'Purpose must be one of: register, forgot_password, change_email',
+            'any.required': 'Purpose is required',
+        }),
 });
 
 export const validateOtpSchema = Joi.object({
-    email: Joi.string()
-        .email()
-        .trim()
-        .lowercase()
-        .required()
-        .messages({
-            "string.empty": "Email is required",
-            "string.email": "Please enter a valid email",
-            "any.required": "Email is required",
-        }),
+    email: Joi.string().email().trim().lowercase().required().messages({
+        'string.empty': 'Email is required',
+        'string.email': 'Please enter a valid email',
+        'any.required': 'Email is required',
+    }),
     otp: Joi.string()
         .length(6)
         .pattern(/^\d{6}$/)
         .required()
         .messages({
-            "string.empty": "OTP is required",
-            "string.length": "OTP must be exactly 6 digits",
-            "string.pattern.base": "OTP must be a 6-digit number",
-            "any.required": "OTP is required",
+            'string.empty': 'OTP is required',
+            'string.length': 'OTP must be exactly 6 digits',
+            'string.pattern.base': 'OTP must be a 6-digit number',
+            'any.required': 'OTP is required',
         }),
     purpose: Joi.string()
-        .valid("register", "forgot_password", "change_email")
+        .valid('register', 'forgot_password', 'change_email')
         .required()
         .messages({
-            "any.only": "Purpose must be one of: register, forgot_password, change_email",
-            "any.required": "Purpose is required",
-        })
+            'any.only':
+                'Purpose must be one of: register, forgot_password, change_email',
+            'any.required': 'Purpose is required',
+        }),
 });
 
 export const createGameSchema = Joi.object({
     player_id: Joi.string().optional(),
-    piece_color: Joi.string().valid("white", "black", "random").required().messages({
-        "any.only": "Piece color must be white, black, or random",
-        "any.required": "Piece color is required"
-    }),
-    game_type: Joi.string().valid("BULLET", "BLITZ", "RAPID").required().messages({
-        "any.only": "Game type must be BULLET, BLITZ or RAPID",
-        "any.required": "Game type is required"
-    }),
+    piece_color: Joi.string()
+        .valid('white', 'black', 'random')
+        .required()
+        .messages({
+            'any.only': 'Piece color must be white, black, or random',
+            'any.required': 'Piece color is required',
+        }),
+    game_type: Joi.string()
+        .valid('BULLET', 'BLITZ', 'RAPID')
+        .required()
+        .messages({
+            'any.only': 'Game type must be BULLET, BLITZ or RAPID',
+            'any.required': 'Game type is required',
+        }),
     game_time: Joi.number().integer().positive().required().messages({
-        "number.base": "Game time must be a number",
-        "number.positive": "Game time must be a positive number",
-        "any.required": "Game time is required"
-    })
+        'number.base': 'Game time must be a number',
+        'number.positive': 'Game time must be a positive number',
+        'any.required': 'Game time is required',
+    }),
 });

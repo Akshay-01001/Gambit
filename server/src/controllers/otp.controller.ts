@@ -1,7 +1,7 @@
-import type { Request, Response } from "express";
-import { prisma } from "../lib/prisma";
-import { sendOtpMail } from "../services/mail.service";
-import { sendError, sendSuccess } from "../utils/apiResponse";
+import type { Request, Response } from 'express';
+import { prisma } from '../lib/prisma';
+import { sendOtpMail } from '../services/mail.service';
+import { sendError, sendSuccess } from '../utils/apiResponse';
 
 const sendOtp = async (req: Request, res: Response) => {
     try {
@@ -10,7 +10,7 @@ const sendOtp = async (req: Request, res: Response) => {
         if (!email) {
             return sendError(res, {
                 statusCode: 400,
-                message: "Email is required",
+                message: 'Email is required',
             });
         }
 
@@ -27,7 +27,8 @@ const sendOtp = async (req: Request, res: Response) => {
         if (existingOtp) {
             return sendError(res, {
                 statusCode: 400,
-                message: "OTP already sent. Please wait before requesting another.",
+                message:
+                    'OTP already sent. Please wait before requesting another.',
             });
         }
 
@@ -67,11 +68,11 @@ const sendOtp = async (req: Request, res: Response) => {
 
         return sendSuccess(res, {
             statusCode: 200,
-            message: "OTP sent successfully",
+            message: 'OTP sent successfully',
         });
     } catch (error) {
         const errorMessage =
-            error instanceof Error ? error.message : "Something went wrong";
+            error instanceof Error ? error.message : 'Something went wrong';
         return sendError(res, {
             statusCode: 500,
             message: errorMessage,
@@ -88,20 +89,20 @@ const verifyOtp = async (req: Request, res: Response) => {
                 email,
                 otp,
                 expiresAt: {
-                    gt: new Date()
-                }
-            }
+                    gt: new Date(),
+                },
+            },
         });
 
         if (!existingOtp) {
-            throw new Error("Invalid Otp")
+            throw new Error('Invalid Otp');
         }
 
         await prisma.otp.deleteMany({
             where: {
                 email,
-                otp
-            }
+                otp,
+            },
         });
 
         // Set isVerified to true for the user's Auth record
@@ -109,26 +110,22 @@ const verifyOtp = async (req: Request, res: Response) => {
         if (user) {
             await prisma.auth.update({
                 where: { userId: user.id },
-                data: { isVerified: true }
+                data: { isVerified: true },
             });
         }
 
         return sendSuccess(res, {
             statusCode: 200,
-            message: "OTP Verified Successfully!!"
+            message: 'OTP Verified Successfully!!',
         });
     } catch (error) {
         const errorMessage =
-            error instanceof Error ? error.message : "Something went wrong";
+            error instanceof Error ? error.message : 'Something went wrong';
         return sendError(res, {
             statusCode: 500,
             message: errorMessage,
         });
     }
-}
-
-
-export {
-    sendOtp,
-    verifyOtp
 };
+
+export { sendOtp, verifyOtp };

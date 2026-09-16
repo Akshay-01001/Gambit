@@ -5,31 +5,35 @@ import api from '../../utils/api';
 import { setUser } from '../../features/user.slice';
 
 interface FormState {
-    username: string
-    country: string
-    bio: string
-    avatar_url: string
-    file: File | null
+    username: string;
+    country: string;
+    bio: string;
+    avatar_url: string;
+    file: File | null;
 }
 
 const EditProfile: React.FC = () => {
-    const { username, country, bio, avatarUrl } = useSelector((state: RootState) => state.user);
+    const { username, country, bio, avatarUrl } = useSelector(
+        (state: RootState) => state.user,
+    );
     const dispatch = useDispatch();
     const [formData, setFormData] = useState<FormState>({
         username: username,
         country: country,
         bio: bio,
         avatar_url: avatarUrl,
-        file: null
+        file: null,
     });
 
-    const handelChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handelChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    ) => {
         const { name, value } = e.target;
         setFormData((prev) => ({
             ...prev,
-            [name]: value
+            [name]: value,
         }));
-    }
+    };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target?.files?.[0];
@@ -41,9 +45,9 @@ const EditProfile: React.FC = () => {
         setFormData((prev) => ({
             ...prev,
             avatar_url: object_url,
-            file
+            file,
         }));
-    }
+    };
 
     const handleSubmit = async () => {
         const form = new FormData();
@@ -73,45 +77,74 @@ const EditProfile: React.FC = () => {
         try {
             const response = await api.patch('/api/auth/update', form, {
                 headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
+                    'Content-Type': 'multipart/form-data',
+                },
             });
 
             if (response.data?.success) {
                 dispatch(setUser(response.data.data));
             }
         } catch (error) {
-            console.error("Failed to update profile", error);
+            console.error('Failed to update profile', error);
         }
-    }
+    };
 
     return (
         <div className="bg-card rounded-2xl p-6 border flex flex-col h-full">
-            <h2 className="text-xl font-display font-bold mb-6">Edit profile</h2>
+            <h2 className="text-xl font-display font-bold mb-6">
+                Edit profile
+            </h2>
 
-            <form className="flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
+            <form
+                className="flex flex-col gap-4"
+                onSubmit={(e) => e.preventDefault()}
+            >
                 {/* Profile Picture Upload */}
                 <div className="flex flex-col gap-2 mb-2">
-                    <span className="text-sm font-semibold text-muted-foreground">Profile Picture</span>
+                    <span className="text-sm font-semibold text-muted-foreground">
+                        Profile Picture
+                    </span>
                     <div className="flex items-center gap-4">
                         <div className="h-16 w-16 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground text-2xl font-bold shrink-0 overflow-hidden">
-                            <img src={formData.avatar_url} alt="avatar" className='h-full w-full' />
+                            <img
+                                src={formData.avatar_url}
+                                alt="avatar"
+                                className="h-full w-full"
+                            />
                         </div>
                         <label className="cursor-pointer flex items-center gap-2 px-3 py-2 bg-secondary hover:bg-secondary/80 rounded-md text-sm transition-colors border border-border">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-upload">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="lucide lucide-upload"
+                            >
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                 <polyline points="17 8 12 3 7 8"></polyline>
                                 <line x1="12" x2="12" y1="3" y2="15"></line>
                             </svg>
                             Upload new avatar
-                            <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                            <input
+                                type="file"
+                                className="hidden"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                            />
                         </label>
                     </div>
                 </div>
 
                 {/* Username */}
                 <div className="flex flex-col gap-1.5">
-                    <label htmlFor="username" className="text-sm font-semibold">Username</label>
+                    <label htmlFor="username" className="text-sm font-semibold">
+                        Username
+                    </label>
                     <input
                         type="text"
                         id="username"
@@ -124,7 +157,9 @@ const EditProfile: React.FC = () => {
 
                 {/* Country */}
                 <div className="flex flex-col gap-1.5">
-                    <label htmlFor="country" className="text-sm font-semibold">Country (2-letter code)</label>
+                    <label htmlFor="country" className="text-sm font-semibold">
+                        Country (2-letter code)
+                    </label>
                     <input
                         type="text"
                         id="country"
@@ -137,7 +172,9 @@ const EditProfile: React.FC = () => {
 
                 {/* Bio */}
                 <div className="flex flex-col gap-1.5">
-                    <label htmlFor="bio" className="text-sm font-semibold">Bio</label>
+                    <label htmlFor="bio" className="text-sm font-semibold">
+                        Bio
+                    </label>
                     <textarea
                         id="bio"
                         name="bio"
@@ -146,16 +183,30 @@ const EditProfile: React.FC = () => {
                         onChange={(e) => handelChange(e)}
                         className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring resize-none"
                     />
-                    <div className="text-right text-xs text-muted-foreground mt-1">{bio?.length || 0}/200</div>
+                    <div className="text-right text-xs text-muted-foreground mt-1">
+                        {bio?.length || 0}/200
+                    </div>
                 </div>
 
                 {/* Save Button */}
                 <div className="mt-2">
-                    <button type="submit"
+                    <button
+                        type="submit"
                         className="cursor-pointer w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-2.5 px-4 rounded-md flex items-center justify-center gap-2 transition-colors"
                         onClick={handleSubmit}
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-save">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="lucide lucide-save"
+                        >
                             <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
                             <polyline points="17 21 17 13 7 13 7 21"></polyline>
                             <polyline points="7 3 7 8 15 8"></polyline>

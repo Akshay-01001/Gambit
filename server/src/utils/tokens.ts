@@ -1,17 +1,12 @@
-import jwt from "jsonwebtoken";
+import jwt from 'jsonwebtoken';
+import { TokenPayload } from '../types/types';
 
-const ACCESS_TOKEN_EXPIRY = "30m";   // 30 minutes
-const REFRESH_TOKEN_EXPIRY = "7d";   // 7 days
+const ACCESS_TOKEN_EXPIRY = '30m'; // 30 minutes
+const REFRESH_TOKEN_EXPIRY = '7d'; // 7 days
 
 // Read secrets at call-time (not module load time) so dotenv has already run
 const getAccessSecret = () => process.env.ACCESS_TOKEN_SECRET as string;
 const getRefreshSecret = () => process.env.REFRESH_TOKEN_SECRET as string;
-
-
-export interface TokenPayload {
-    userId: string;
-    email: string;
-}
 
 /**
  * Generate an access token (short-lived, 30 min).
@@ -35,7 +30,7 @@ export const generateRefreshToken = (payload: TokenPayload): string => {
  * Convenience helper – returns both tokens in one call.
  */
 export const generateTokenPair = (
-    payload: TokenPayload
+    payload: TokenPayload,
 ): { accessToken: string; refreshToken: string } => {
     return {
         accessToken: generateAccessToken(payload),

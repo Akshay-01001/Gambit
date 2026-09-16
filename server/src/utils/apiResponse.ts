@@ -1,24 +1,5 @@
-import { Response } from "express";
-
-/**
- * Standard API response shape returned by all endpoints.
- *
- * Success responses carry `data` (generic) and an optional `meta` bag for
- * alongside the human-readable `message`.
- */
-interface ApiSuccessBody<T = unknown> {
-    success: true;
-    statusCode: number;
-    message: string;
-    data: T;
-}
-
-interface ApiErrorBody {
-    success: false;
-    statusCode: number;
-    message: string;
-    errors?: Record<string, string>[];
-}
+import { Response } from 'express';
+import { ApiSuccessBody, ApiErrorBody } from '../types/types';
 
 /**
  * Send a standardised success response.
@@ -37,12 +18,12 @@ export const sendSuccess = <T = unknown>(
         message?: string;
         data?: T;
         meta?: Record<string, unknown>;
-    } = {}
+    } = {},
 ): Response<ApiSuccessBody<T>> => {
     const {
         statusCode = 200,
-        message = "Success",
-        data = null as unknown as T
+        message = 'Success',
+        data = null as unknown as T,
     } = opts;
 
     const body: ApiSuccessBody<T> = {
@@ -54,10 +35,6 @@ export const sendSuccess = <T = unknown>(
 
     return res.status(statusCode).json(body);
 };
-
-/* ------------------------------------------------------------------ */
-/*  Error helper                                                       */
-/* ------------------------------------------------------------------ */
 
 /**
  * Send a standardised error response.
@@ -74,18 +51,14 @@ export const sendError = (
         statusCode?: number;
         message?: string;
         errors?: Record<string, string>[];
-    } = {}
+    } = {},
 ): Response<ApiErrorBody> => {
-    const {
-        statusCode = 500,
-        message = "Something went wrong",
-        errors,
-    } = opts;
+    const { statusCode = 500, message = 'Something went wrong', errors } = opts;
 
     const body: ApiErrorBody = {
         success: false,
         statusCode,
-        message
+        message,
     };
 
     if (errors && errors.length > 0) {

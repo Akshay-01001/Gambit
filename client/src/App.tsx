@@ -1,64 +1,66 @@
-import { Home } from "./components/Home/Home";
-import Login from "./components/Login/Login";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import OnboardingPage from "./components/Onboarding/Onboarding";
-import ProtectedRoute from "./Routes/ProtectedRoute";
-import RequireOnboardingRoute from "./Routes/OnboardingRoute";
-import { AuthProvider } from "./contexts/AuthContext";
-import { OnboardingProvider } from "./contexts/OnboardingContext";
-import VerifyOtp from "./components/Onboarding/VerifyOtp";
-import GamePage from "./components/Game/GamePage";
-import PlayPage from "./components/Play/PlayPage";
-import ProfilePage from "./components/Profile/ProfilePage";
-import { useEffect } from "react";
-import { gameManager } from "./game/gameManager";
-import { useSelector } from "react-redux";
-import type { RootState } from "./store/store";
-import { getCurrentGame } from "./utils/apiFunctions";
+import { Home } from './components/Home/Home';
+import Login from './components/Login/Login';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import OnboardingPage from './components/Onboarding/Onboarding';
+import ProtectedRoute from './Routes/ProtectedRoute';
+import RequireOnboardingRoute from './Routes/OnboardingRoute';
+import { AuthProvider } from './contexts/AuthContext';
+import { OnboardingProvider } from './contexts/OnboardingContext';
+import VerifyOtp from './components/Onboarding/VerifyOtp';
+import GamePage from './components/Game/GamePage';
+import PlayPage from './components/Play/PlayPage';
+import ProfilePage from './components/Profile/ProfilePage';
+import { useEffect } from 'react';
+import { gameManager } from './game/gameManager';
+import { useSelector } from 'react-redux';
+import type { RootState } from './store/store';
+import { getCurrentGame } from './utils/apiFunctions';
 
 const router = createBrowserRouter([
     {
-        path: "/login",
+        path: '/login',
         element: <Login />,
     },
     {
         element: <RequireOnboardingRoute />,
         children: [
             {
-                path: "/",
+                path: '/',
                 element: <Home />,
             },
             {
-                path: "/play",
-                element: <PlayPage />
+                path: '/play',
+                element: <PlayPage />,
             },
             {
-                path: "/game/:id",
-                element: <GamePage />
-            }
-        ]
+                path: '/game/:id',
+                element: <GamePage />,
+            },
+        ],
     },
     {
         element: <ProtectedRoute />,
         children: [
             {
-                path: "/onboarding",
-                element: <OnboardingPage />
+                path: '/onboarding',
+                element: <OnboardingPage />,
             },
             {
                 path: '/verify-otp',
-                element: <VerifyOtp />
+                element: <VerifyOtp />,
             },
             {
                 path: '/profile',
-                element: <ProfilePage />
-            }
-        ]
-    }
+                element: <ProfilePage />,
+            },
+        ],
+    },
 ]);
 
 function App() {
-    const isCompletedOnboarding = useSelector((state: RootState) => state.user.isCompletedOnboarding);
+    const isCompletedOnboarding = useSelector(
+        (state: RootState) => state.user.isCompletedOnboarding,
+    );
 
     useEffect(() => {
         // Initialize the game manager (and connect the socket) only when the user is fully onboarded!
@@ -69,7 +71,7 @@ function App() {
 
     const fetchCurrentGame = async () => {
         try {
-            const res = await getCurrentGame("/api/game/current");
+            const res = await getCurrentGame('/api/game/current');
             if (res?.data?.data?.gameId) {
                 const gameId = res?.data?.data?.gameId;
                 gameManager.reJoinGame(gameId);
@@ -78,7 +80,7 @@ function App() {
         } catch (error) {
             console.error(error);
         }
-    }
+    };
 
     useEffect(() => {
         if (!isCompletedOnboarding) return;
@@ -91,7 +93,7 @@ function App() {
                 <RouterProvider router={router} />
             </OnboardingProvider>
         </AuthProvider>
-    )
+    );
 }
 
 export default App;

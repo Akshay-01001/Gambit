@@ -9,19 +9,25 @@ export interface RecentGameCardProps {
     result: GameResult;
 }
 
-const RecentGameCard: React.FC<RecentGameCardProps> = ({ gameMode, date, result }) => {
+const RecentGameCard: React.FC<RecentGameCardProps> = ({
+    gameMode,
+    date,
+    result,
+}) => {
     // Determine badge styles based on the result
-    let badgeStyles = "";
-    
+    let badgeStyles = '';
+
     switch (result) {
         case 'WON':
-            badgeStyles = "bg-green-500/10 text-green-500 border border-green-500/20";
+            badgeStyles =
+                'bg-green-500/10 text-green-500 border border-green-500/20';
             break;
         case 'LOST':
-            badgeStyles = "bg-red-500/10 text-red-500 border border-red-500/20";
+            badgeStyles = 'bg-red-500/10 text-red-500 border border-red-500/20';
             break;
         case 'DRAW':
-            badgeStyles = "bg-gray-500/10 text-gray-400 border border-gray-500/20";
+            badgeStyles =
+                'bg-gray-500/10 text-gray-400 border border-gray-500/20';
             break;
     }
 
@@ -31,7 +37,9 @@ const RecentGameCard: React.FC<RecentGameCardProps> = ({ gameMode, date, result 
                 <span className="font-semibold text-sm">{gameMode}</span>
                 <span className="text-xs text-muted-foreground">{date}</span>
             </div>
-            <div className={`px-3 py-1 rounded-md text-xs font-bold tracking-wider ${badgeStyles}`}>
+            <div
+                className={`px-3 py-1 rounded-md text-xs font-bold tracking-wider ${badgeStyles}`}
+            >
                 {result}
             </div>
         </div>

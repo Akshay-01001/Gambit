@@ -1,7 +1,7 @@
-import type { Request, Response } from "express";
-import { prisma } from "../lib/prisma";
-import { sendError, sendSuccess } from "../utils/apiResponse";
-import { GameStatus } from "../generated/prisma/enums";
+import type { Request, Response } from 'express';
+import { prisma } from '../lib/prisma';
+import { sendError, sendSuccess } from '../utils/apiResponse';
+import { GameStatus } from '../generated/prisma/enums';
 
 const getUserRunningGame = async (req: Request, res: Response) => {
     try {
@@ -10,44 +10,41 @@ const getUserRunningGame = async (req: Request, res: Response) => {
         if (!userId) {
             sendError(res, {
                 statusCode: 401,
-                message: "Unauthorized",
+                message: 'Unauthorized',
             });
         }
 
         const existingGame = await prisma.game.findFirst({
             where: {
-                OR: [
-                    { blackPlayerId: userId },
-                    { whitePlayerId: userId }
-                ],
+                OR: [{ blackPlayerId: userId }, { whitePlayerId: userId }],
                 status: {
-                    in: ["PLAYING", "WAITING"]
-                }
-            }
+                    in: ['PLAYING', 'WAITING'],
+                },
+            },
         });
 
         if (existingGame) {
             return sendSuccess(res, {
-                message: "Game Found",
+                message: 'Game Found',
                 data: {
-                    gameId: existingGame.id
-                }
+                    gameId: existingGame.id,
+                },
             });
         }
 
         return sendSuccess(res, {
-            message: "No Game Found",
-            data: null
+            message: 'No Game Found',
+            data: null,
         });
     } catch (error) {
         const errorMessage =
-            error instanceof Error ? error.message : "Something went wrong";
+            error instanceof Error ? error.message : 'Something went wrong';
         return sendError(res, {
             statusCode: 500,
             message: errorMessage,
         });
     }
-}
+};
 
 const getUserPlayerGames = async (req: Request, res: Response) => {
     try {
@@ -56,7 +53,7 @@ const getUserPlayerGames = async (req: Request, res: Response) => {
         if (!userId) {
             return sendError(res, {
                 statusCode: 401,
-                message: "Unauthorized",
+                message: 'Unauthorized',
             });
         }
 
@@ -66,10 +63,7 @@ const getUserPlayerGames = async (req: Request, res: Response) => {
         const totalItemsSkip = (page - 1) * limit;
 
         const where = {
-            OR: [
-                { whitePlayerId: userId },
-                { blackPlayerId: userId },
-            ],
+            OR: [{ whitePlayerId: userId }, { blackPlayerId: userId }],
             status: {
                 notIn: [GameStatus.WAITING, GameStatus.PLAYING],
             },
@@ -81,7 +75,7 @@ const getUserPlayerGames = async (req: Request, res: Response) => {
                 take: limit,
                 where,
                 orderBy: {
-                    createdAt: "desc",
+                    createdAt: 'desc',
                 },
             }),
 
@@ -94,7 +88,7 @@ const getUserPlayerGames = async (req: Request, res: Response) => {
 
         const serializedResult = result.map((game) => ({
             ...game,
-            turnStartedAt: game.turnStartedAt?.toString()
+            turnStartedAt: game.turnStartedAt?.toString(),
         }));
 
         const paginatedData = {
@@ -108,20 +102,17 @@ const getUserPlayerGames = async (req: Request, res: Response) => {
         };
 
         return sendSuccess(res, {
-            message: "Recent Games",
-            data: paginatedData
+            message: 'Recent Games',
+            data: paginatedData,
         });
     } catch (error) {
         const errorMessage =
-            error instanceof Error ? error.message : "Something went wrong";
+            error instanceof Error ? error.message : 'Something went wrong';
         return sendError(res, {
             statusCode: 500,
             message: errorMessage,
         });
     }
-}
-
-export {
-    getUserRunningGame,
-    getUserPlayerGames
 };
+
+export { getUserRunningGame, getUserPlayerGames };

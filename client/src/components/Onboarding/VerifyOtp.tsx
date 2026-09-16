@@ -1,15 +1,15 @@
-import React, { useRef, useState, useEffect } from "react";
-import { sendOtpMail, verifyOtp } from "../../utils/apiFunctions";
-import { useSelector, useDispatch } from "react-redux";
-import type { RootState } from "../../store/store";
-import { setUser } from "../../features/user.slice";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
-import CountDown from "react-countdown"
-import axios from "axios";
+import React, { useRef, useState, useEffect } from 'react';
+import { sendOtpMail, verifyOtp } from '../../utils/apiFunctions';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState } from '../../store/store';
+import { setUser } from '../../features/user.slice';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
+import CountDown from 'react-countdown';
+import axios from 'axios';
 
 const VerifyOtp = () => {
-    const { email } = useSelector((state: RootState) => state.user)
+    const { email } = useSelector((state: RootState) => state.user);
     const OTP_LENGTH = 6;
 
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -19,17 +19,17 @@ const VerifyOtp = () => {
     const navigate = useNavigate();
     const { setIsEmailVerified } = useAuth();
 
-    const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
+    const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState("");
+    const [error, setError] = useState('');
     const [targetDate, setTargetDate] = useState<number>(() => {
         const now = Date.now();
-        const expiresAt = Number(localStorage.getItem("otpExpiresAt"));
+        const expiresAt = Number(localStorage.getItem('otpExpiresAt'));
         if (expiresAt && expiresAt > now) {
             return expiresAt;
         }
         if (expiresAt) {
-            localStorage.removeItem("otpExpiresAt");
+            localStorage.removeItem('otpExpiresAt');
         }
         return 0;
     });
@@ -40,49 +40,56 @@ const VerifyOtp = () => {
         }
     }, []);
 
-
     const sendMail = async () => {
         hasSentOtp.current = true;
         try {
             await sendOtpMail('/api/otp/send-otp', { email });
             const newExpiry = Date.now() + 3 * 60 * 1000; // 3 minutes
-            localStorage.setItem("otpExpiresAt", String(newExpiry));
+            localStorage.setItem('otpExpiresAt', String(newExpiry));
             setTargetDate(newExpiry);
         } catch (error) {
             console.error(error);
         }
-    }
+    };
 
     useEffect(() => {
         if (!hasSentOtp.current) {
-            sendMail()
+            sendMail();
         }
     }, []);
 
     const handleVerify = async (e?: React.FormEvent<HTMLFormElement>) => {
         if (e) e.preventDefault();
-        const otpString = otp.join("");
+        const otpString = otp.join('');
         if (otpString.length !== OTP_LENGTH) return;
         setIsLoading(true);
 
         try {
-            const response = await verifyOtp('/api/otp/verify-otp', { email, otp: otpString });
+            const response = await verifyOtp('/api/otp/verify-otp', {
+                email,
+                otp: otpString,
+            });
             if (response.data.success) {
                 setIsEmailVerified(true);
                 dispatch(setUser({ isVerified: true }));
-                navigate("/");
+                navigate('/');
             }
         } catch (error) {
-            console.error("Verification failed", error);
-            const errorMessage = axios.isAxiosError(error) ? error.response?.data?.message : "Something Went Wrong";
+            console.error('Verification failed', error);
+            const errorMessage = axios.isAxiosError(error)
+                ? error.response?.data?.message
+                : 'Something Went Wrong';
             setError(errorMessage);
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-        const value = e.target.value.replace(/\D/g, "");
+    const handleChange = (
+        e: React.ChangeEvent<HTMLInputElement>,
+        index: number,
+    ) => {
+        const value = e.target.value.replace(/\D/g, '');
         if (!value) return;
 
         const newOtp = [...otp];
@@ -92,18 +99,21 @@ const VerifyOtp = () => {
         if (index < OTP_LENGTH - 1) {
             inputRefs.current[index + 1].focus();
         }
-    }
+    };
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    const handleKeyDown = (
+        e: React.KeyboardEvent<HTMLInputElement>,
+        index: number,
+    ) => {
         const key = e.key;
 
-        if (key === "ArrowLeft") {
+        if (key === 'ArrowLeft') {
             e.preventDefault();
             if (index > 0) inputRefs.current[index - 1]?.focus();
             return;
         }
 
-        if (key === "ArrowRight" || key === " ") {
+        if (key === 'ArrowRight' || key === ' ') {
             e.preventDefault();
             if (index < OTP_LENGTH - 1) inputRefs.current[index + 1]?.focus();
             return;
@@ -120,7 +130,7 @@ const VerifyOtp = () => {
             return;
         }
 
-        if (key.toLowerCase() !== "backspace") {
+        if (key.toLowerCase() !== 'backspace') {
             return;
         }
 
@@ -130,41 +140,46 @@ const VerifyOtp = () => {
         const newOtp = [...otp];
 
         if (otp[index]) {
-            newOtp[index] = "";
+            newOtp[index] = '';
             setOtp(newOtp);
             return;
         }
 
         if (index > 0) {
             inputRefs.current[index - 1]?.focus();
-            newOtp[index - 1] = "";
+            newOtp[index - 1] = '';
             setOtp(newOtp);
         }
 
-        setError("");
-    }
+        setError('');
+    };
 
     return (
         <div className="min-h-screen w-screen bg-background flex justify-center items-start px-6 py-10">
-            <div className='w-full max-w-2xl px-6 flex flex-col'>
+            <div className="w-full max-w-2xl px-6 flex flex-col">
                 {/* Logo Section */}
-                <div className='flex items-center justify-between'>
+                <div className="flex items-center justify-between">
                     <div className="flex items-center cursor-pointer">
                         <span className="bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] h-10 w-10 flex justify-center items-center rounded-lg">
-                            <img src='/logo.svg' alt="logo" className="h-6 w-6" />
+                            <img
+                                src="/logo.svg"
+                                alt="logo"
+                                className="h-6 w-6"
+                            />
                         </span>
-                        <span className="font-bold text-xl ml-3 tracking-wide font-display">Gambit</span>
+                        <span className="font-bold text-xl ml-3 tracking-wide font-display">
+                            Gambit
+                        </span>
                     </div>
-
                 </div>
-                <div className='mt-6'>
-                    <h1 className='mt-4 font-display text-3xl font-bold'>
+                <div className="mt-6">
+                    <h1 className="mt-4 font-display text-3xl font-bold">
                         Verify Your Email
                     </h1>
                 </div>
                 <form onSubmit={handleVerify}>
-                    <div className='mt-10 space-y-6'>
-                        <div className='flex items-center gap-4'>
+                    <div className="mt-10 space-y-6">
+                        <div className="flex items-center gap-4">
                             {Array.from({ length: 6 }, (_, index) => {
                                 return (
                                     <input
@@ -172,55 +187,78 @@ const VerifyOtp = () => {
                                             inputRefs.current[index] = el;
                                         }}
                                         id={`input-${index + 1}`}
-                                        key={index} type="text"
+                                        key={index}
+                                        type="text"
                                         maxLength={1}
                                         value={otp[index]}
-                                        onKeyDown={(e) => handleKeyDown(e, index)}
+                                        onKeyDown={(e) =>
+                                            handleKeyDown(e, index)
+                                        }
                                         onChange={(e) => handleChange(e, index)}
-                                        className='h-14 w-full rounded-lg border border-border bg-card text-center font-display text-2xl font-semibold outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30' />
+                                        className="h-14 w-full rounded-lg border border-border bg-card text-center font-display text-2xl font-semibold outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
+                                    />
                                 );
                             })}
                         </div>
-                        <p className='text-sm text-muted-foreground'>
+                        <p className="text-sm text-muted-foreground">
                             Didn't receive the code?{' '}
                             {targetDate > 0 ? (
-                                <span className='text-primary font-medium'>
+                                <span className="text-primary font-medium">
                                     <CountDown
                                         date={targetDate}
                                         onComplete={() => {
-                                            localStorage.removeItem("otpExpiresAt");
+                                            localStorage.removeItem(
+                                                'otpExpiresAt',
+                                            );
                                             setTargetDate(0);
                                         }}
-                                        renderer={({ minutes, seconds, completed }) => {
+                                        renderer={({
+                                            minutes,
+                                            seconds,
+                                            completed,
+                                        }) => {
                                             if (completed) return null;
-                                            return <span>{minutes}:{seconds.toString().padStart(2, '0')}</span>;
-                                        }} />
+                                            return (
+                                                <span>
+                                                    {minutes}:
+                                                    {seconds
+                                                        .toString()
+                                                        .padStart(2, '0')}
+                                                </span>
+                                            );
+                                        }}
+                                    />
                                 </span>
                             ) : (
-                                <span onClick={sendMail} className='text-primary cursor-pointer hover:underline font-medium'>
+                                <span
+                                    onClick={sendMail}
+                                    className="text-primary cursor-pointer hover:underline font-medium"
+                                >
                                     Resend
                                 </span>
                             )}
                         </p>
                     </div>
-                    <div className='mt-8'>
+                    <div className="mt-8">
                         <button
                             type="submit"
-                            disabled={otp.join("").length !== OTP_LENGTH || isLoading}
-                            className="w-full bg-primary text-primary-foreground h-10 px-4 py-2 rounded-md font-medium transition-colors hover:bg-primary/90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                            {isLoading ? "Verifying..." : "Verify Email"}
+                            disabled={
+                                otp.join('').length !== OTP_LENGTH || isLoading
+                            }
+                            className="w-full bg-primary text-primary-foreground h-10 px-4 py-2 rounded-md font-medium transition-colors hover:bg-primary/90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isLoading ? 'Verifying...' : 'Verify Email'}
                         </button>
                     </div>
                 </form>
-                {
-                    error.trim() &&
+                {error.trim() && (
                     <div className="text-sm text-red-500 mt-2 font-semibold text-center">
                         {error}
                     </div>
-                }
+                )}
             </div>
         </div>
-    )
-}
+    );
+};
 
 export default VerifyOtp;

@@ -1,12 +1,15 @@
-import { Request, Response } from "express";
-import bcrypt from "bcrypt";
-import { registerSchema, loginSchema } from "../utils/validations";
-import { sendSuccess, sendError } from "../utils/apiResponse";
-import { generateAccessToken, generateTokenPair } from "../utils/tokens";
-import { prisma } from "../lib/prisma";
-import { verifyGoogleIdToken } from "../lib/google";
-import { uploadImageToCloudinary } from "../utils/cloudinary";
-import { accessTokenCookieOptions, refreshTokenCookieOptions } from "../lib/constants";
+import { Request, Response } from 'express';
+import bcrypt from 'bcrypt';
+import { registerSchema, loginSchema } from '../utils/validations';
+import { sendSuccess, sendError } from '../utils/apiResponse';
+import { generateAccessToken, generateTokenPair } from '../utils/tokens';
+import { prisma } from '../lib/prisma';
+import { verifyGoogleIdToken } from '../lib/google';
+import { uploadImageToCloudinary } from '../utils/cloudinary';
+import {
+    accessTokenCookieOptions,
+    refreshTokenCookieOptions,
+} from '../lib/constants';
 
 const registerUser = async (req: Request, res: Response) => {
     try {
@@ -16,7 +19,7 @@ const registerUser = async (req: Request, res: Response) => {
         if (error) {
             return sendError(res, {
                 statusCode: 400,
-                message: error.details[0].message || "Validation Error",
+                message: error.details[0].message || 'Validation Error',
             });
         }
 
@@ -25,14 +28,14 @@ const registerUser = async (req: Request, res: Response) => {
         // 2. Check if a user already exists with this email
         const existingAuth = await prisma.auth.findFirst({
             where: {
-                user: { email }
+                user: { email },
             },
         });
 
         if (existingAuth) {
             return sendError(res, {
                 statusCode: 400,
-                message: "An account already exists with this email",
+                message: 'An account already exists with this email',
             });
         }
 
@@ -53,7 +56,7 @@ const registerUser = async (req: Request, res: Response) => {
                 data: {
                     userId: user.id,
                     passwordHash,
-                    provider: "LOCAL",
+                    provider: 'LOCAL',
                     isVerified: false,
                 },
             });
@@ -77,13 +80,13 @@ const registerUser = async (req: Request, res: Response) => {
         });
 
         // 7. Set tokens as HttpOnly cookies
-        res.cookie("accessToken", accessToken, accessTokenCookieOptions);
-        res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
+        res.cookie('accessToken', accessToken, accessTokenCookieOptions);
+        res.cookie('refreshToken', refreshToken, refreshTokenCookieOptions);
 
         // 8. Return success
         return sendSuccess(res, {
             statusCode: 201,
-            message: "Account created successfully",
+            message: 'Account created successfully',
             data: {
                 user: {
                     id: user.id,
@@ -95,14 +98,13 @@ const registerUser = async (req: Request, res: Response) => {
         });
     } catch (error) {
         const errorMessage =
-            error instanceof Error ? error.message : "Something went wrong";
+            error instanceof Error ? error.message : 'Something went wrong';
         return sendError(res, {
             statusCode: 500,
             message: errorMessage,
         });
     }
 };
-
 
 const loginUser = async (req: Request, res: Response) => {
     try {
@@ -112,7 +114,7 @@ const loginUser = async (req: Request, res: Response) => {
         if (error) {
             return sendError(res, {
                 statusCode: 400,
-                message: error.details[0].message || "Validation Error",
+                message: error.details[0].message || 'Validation Error',
             });
         }
 
@@ -124,7 +126,7 @@ const loginUser = async (req: Request, res: Response) => {
                 user: { email },
             },
             include: {
-                user: true,  // pull in the related User row
+                user: true, // pull in the related User row
             },
         });
 
@@ -132,7 +134,7 @@ const loginUser = async (req: Request, res: Response) => {
         if (!authRecord) {
             return sendError(res, {
                 statusCode: 401,
-                message: "Invalid email or password",
+                message: 'Invalid email or password',
             });
         }
 
@@ -140,7 +142,7 @@ const loginUser = async (req: Request, res: Response) => {
         if (authRecord.user.isDeleted) {
             return sendError(res, {
                 statusCode: 403,
-                message: "This account has been deactivated",
+                message: 'This account has been deactivated',
             });
         }
 
@@ -148,16 +150,19 @@ const loginUser = async (req: Request, res: Response) => {
         if (!authRecord.passwordHash) {
             return sendError(res, {
                 statusCode: 401,
-                message: "Invalid email or password",
+                message: 'Invalid email or password',
             });
         }
 
-        const isPasswordValid = await bcrypt.compare(password, authRecord.passwordHash);
+        const isPasswordValid = await bcrypt.compare(
+            password,
+            authRecord.passwordHash,
+        );
 
         if (!isPasswordValid) {
             return sendError(res, {
                 statusCode: 401,
-                message: "Invalid email or password",
+                message: 'Invalid email or password',
             });
         }
 
@@ -181,13 +186,13 @@ const loginUser = async (req: Request, res: Response) => {
         });
 
         // 8. Set HttpOnly cookies
-        res.cookie("accessToken", accessToken, accessTokenCookieOptions);
-        res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
+        res.cookie('accessToken', accessToken, accessTokenCookieOptions);
+        res.cookie('refreshToken', refreshToken, refreshTokenCookieOptions);
 
         // 9. Return success
         return sendSuccess(res, {
             statusCode: 200,
-            message: "Login successful",
+            message: 'Login successful',
             data: {
                 user: {
                     id: authRecord.userId,
@@ -197,10 +202,9 @@ const loginUser = async (req: Request, res: Response) => {
                 },
             },
         });
-
     } catch (error) {
         const errorMessage =
-            error instanceof Error ? error.message : "Something went wrong";
+            error instanceof Error ? error.message : 'Something went wrong';
         return sendError(res, {
             statusCode: 500,
             message: errorMessage,
@@ -215,7 +219,7 @@ const googleLogin = async (req: Request, res: Response) => {
         if (!idToken) {
             return sendError(res, {
                 statusCode: 400,
-                message: "Invalid Token ID"
+                message: 'Invalid Token ID',
             });
         }
 
@@ -224,21 +228,20 @@ const googleLogin = async (req: Request, res: Response) => {
         const existUser = await prisma.auth.findFirst({
             where: {
                 user: {
-                    email: userDetails.email
-                }
+                    email: userDetails.email,
+                },
             },
             include: {
-                user: true
-            }
+                user: true,
+            },
         });
 
         if (existUser) {
-
             // Edge case: Reject soft-deleted users
             if (existUser.user.isDeleted) {
                 return sendError(res, {
                     statusCode: 403,
-                    message: "This account has been deactivated",
+                    message: 'This account has been deactivated',
                 });
             }
 
@@ -246,12 +249,12 @@ const googleLogin = async (req: Request, res: Response) => {
             if (existUser.provider === 'LOCAL') {
                 await prisma.auth.update({
                     where: {
-                        userId: existUser.userId  // Fix: use userId, not existUser.id (which is the Auth record's own ID)
+                        userId: existUser.userId, // Fix: use userId, not existUser.id (which is the Auth record's own ID)
                     },
                     data: {
-                        provider: "BOTH",         // Fix: preserve local login capability
-                        providerId: userDetails.googleId,  // Fix: store Google identity
-                    }
+                        provider: 'BOTH', // Fix: preserve local login capability
+                        providerId: userDetails.googleId, // Fix: store Google identity
+                    },
                 });
             }
 
@@ -259,48 +262,50 @@ const googleLogin = async (req: Request, res: Response) => {
             if (!existUser.user.avatarUrl && userDetails.picture) {
                 await prisma.user.update({
                     where: { id: existUser.userId },
-                    data: { avatarUrl: userDetails.picture }
+                    data: { avatarUrl: userDetails.picture },
                 });
             }
 
             const { accessToken, refreshToken } = generateTokenPair({
                 userId: existUser.userId,
-                email: existUser.user.email
+                email: existUser.user.email,
             });
 
             await prisma.refreshToken.deleteMany({
                 where: {
-                    userId: existUser.userId
-                }
+                    userId: existUser.userId,
+                },
             });
 
             await prisma.refreshToken.create({
                 data: {
                     token: refreshToken,
                     userId: existUser.userId,
-                    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-                }
+                    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+                },
             });
 
-            res.cookie("accessToken", accessToken, accessTokenCookieOptions);
-            res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
+            res.cookie('accessToken', accessToken, accessTokenCookieOptions);
+            res.cookie('refreshToken', refreshToken, refreshTokenCookieOptions);
 
             // Fix: Use sendSuccess() for consistent response format
             return sendSuccess(res, {
                 statusCode: 200,
-                message: "Login Successful",
+                message: 'Login Successful',
                 data: {
                     user: {
                         id: existUser.userId,
                         email: existUser.user.email,
                         username: existUser.user.username,
                         isVerified: existUser.isVerified,
-                        isOnboardingCompleted: existUser.user.isCompletedOnboarding,
-                        avatarUrl: existUser.user.avatarUrl || userDetails.picture,
+                        isOnboardingCompleted:
+                            existUser.user.isCompletedOnboarding,
+                        avatarUrl:
+                            existUser.user.avatarUrl || userDetails.picture,
                         gender: existUser.user.gender,
                         country: existUser.user.country,
-                    }
-                }
+                    },
+                },
             });
         }
 
@@ -310,17 +315,17 @@ const googleLogin = async (req: Request, res: Response) => {
                     email: userDetails.email,
                     isCompletedOnboarding: false,
                     avatarUrl: userDetails.picture,
-                }
+                },
             });
 
             const auth = await tx.auth.create({
                 data: {
                     userId: user.id,
-                    provider: "GOOGLE",
+                    provider: 'GOOGLE',
                     providerId: userDetails.googleId,
                     isVerified: userDetails.emailVerified || false,
                 },
-                include: { user: true }
+                include: { user: true },
             });
 
             return auth;
@@ -328,40 +333,41 @@ const googleLogin = async (req: Request, res: Response) => {
 
         const { accessToken, refreshToken } = generateTokenPair({
             userId: newUserAuth.userId,
-            email: newUserAuth.user.email
+            email: newUserAuth.user.email,
         });
 
         await prisma.refreshToken.create({
             data: {
                 token: refreshToken,
                 userId: newUserAuth.userId,
-                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-            }
+                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            },
         });
 
-        res.cookie("accessToken", accessToken, accessTokenCookieOptions);
-        res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
+        res.cookie('accessToken', accessToken, accessTokenCookieOptions);
+        res.cookie('refreshToken', refreshToken, refreshTokenCookieOptions);
 
         // Fix: Use sendSuccess() for consistent response format
         return sendSuccess(res, {
             statusCode: 201,
-            message: "Account created. Please complete onboarding.",
+            message: 'Account created. Please complete onboarding.',
             data: {
                 user: {
                     id: newUserAuth.userId,
                     email: newUserAuth.user.email,
                     username: newUserAuth.user.username,
                     isVerified: newUserAuth.isVerified,
-                    isOnboardingCompleted: newUserAuth.user.isCompletedOnboarding,
+                    isOnboardingCompleted:
+                        newUserAuth.user.isCompletedOnboarding,
                     avatarUrl: newUserAuth.user.avatarUrl,
                     gender: newUserAuth.user.gender,
                     country: newUserAuth.user.country,
-                }
-            }
+                },
+            },
         });
     } catch (error) {
         const errorMessage =
-            error instanceof Error ? error.message : "Something went wrong";
+            error instanceof Error ? error.message : 'Something went wrong';
         return sendError(res, {
             statusCode: 500,
             message: errorMessage,
@@ -377,43 +383,43 @@ const generateNewAccessToken = async (req: Request, res: Response) => {
             where: {
                 userId,
                 expiresAt: {
-                    gt: new Date()
-                }
+                    gt: new Date(),
+                },
             },
             include: {
-                user: true
-            }
+                user: true,
+            },
         });
 
         if (!userToken) {
             return sendError(res, {
                 statusCode: 401,
-                message: "Please Login",
+                message: 'Please Login',
             });
         }
 
         const tokenPayload = {
             email: userToken.user.email,
-            userId: userToken.userId
-        }
+            userId: userToken.userId,
+        };
 
         const accessToken = await generateAccessToken(tokenPayload);
 
-        res.cookie("accessToken", accessToken, accessTokenCookieOptions);
+        res.cookie('accessToken', accessToken, accessTokenCookieOptions);
 
         return res.status(200).json({
             success: true,
-            message: "Token Generated Successfully"
-        })
+            message: 'Token Generated Successfully',
+        });
     } catch (error) {
         const errorMessage =
-            error instanceof Error ? error.message : "Something went wrong";
+            error instanceof Error ? error.message : 'Something went wrong';
         return sendError(res, {
             statusCode: 500,
             message: errorMessage,
         });
     }
-}
+};
 
 const onboardUser = async (req: Request, res: Response) => {
     try {
@@ -421,7 +427,7 @@ const onboardUser = async (req: Request, res: Response) => {
         if (!userId) {
             return sendError(res, {
                 statusCode: 401,
-                message: "Unauthorized",
+                message: 'Unauthorized',
             });
         }
 
@@ -429,30 +435,37 @@ const onboardUser = async (req: Request, res: Response) => {
         let { avatar_url } = req.body;
 
         let parsedAvatarUrl = avatar_url;
-        if (parsedAvatarUrl === 'undefined' || parsedAvatarUrl === 'null' || !parsedAvatarUrl) {
+        if (
+            parsedAvatarUrl === 'undefined' ||
+            parsedAvatarUrl === 'null' ||
+            !parsedAvatarUrl
+        ) {
             parsedAvatarUrl = '';
         }
 
         let data: { url: string; publicId: string | null } = {
             url: parsedAvatarUrl,
-            publicId: null
+            publicId: null,
         };
 
         const existUsername = await prisma.user.findFirst({
             where: {
-                username
-            }
+                username,
+            },
         });
 
         if (existUsername) {
             return sendError(res, {
                 statusCode: 400,
-                message: "Username Already Taken"
-            })
+                message: 'Username Already Taken',
+            });
         }
 
         if (req.file) {
-            data = await uploadImageToCloudinary(req.file.buffer, req.file.mimetype);
+            data = await uploadImageToCloudinary(
+                req.file.buffer,
+                req.file.mimetype,
+            );
         }
 
         const { updatedUser } = await prisma.$transaction(async (txn) => {
@@ -472,32 +485,31 @@ const onboardUser = async (req: Request, res: Response) => {
                 where: { userId: updatedUser.id },
                 update: {},
                 create: {
-                    userId: updatedUser.id
-                }
+                    userId: updatedUser.id,
+                },
             });
 
             return {
                 updatedUser,
-                chessProfile
+                chessProfile,
             };
         });
 
         return sendSuccess(res, {
             statusCode: 200,
-            message: "Onboarding successful",
+            message: 'Onboarding successful',
             data: updatedUser,
         });
-
     } catch (error) {
         const errorMessage =
-            error instanceof Error ? error.message : "Something went wrong";
-        console.log(error)
+            error instanceof Error ? error.message : 'Something went wrong';
+        console.log(error);
         return sendError(res, {
             statusCode: 500,
             message: errorMessage,
         });
     }
-}
+};
 
 const logout = async (req: Request, res: Response) => {
     try {
@@ -506,39 +518,37 @@ const logout = async (req: Request, res: Response) => {
         if (!userId) {
             return sendError(res, {
                 statusCode: 401,
-                message: "Unauthorized",
+                message: 'Unauthorized',
             });
         }
 
-        const refreshToken = req.cookies?.["refreshToken"]
+        const refreshToken = req.cookies?.['refreshToken'];
 
         if (refreshToken) {
             await prisma.refreshToken.delete({
                 where: {
                     token: refreshToken,
-                    userId
-                }
+                    userId,
+                },
             });
         }
 
-        res.clearCookie("accessToken", accessTokenCookieOptions);
-        res.clearCookie("refreshToken", refreshTokenCookieOptions);
+        res.clearCookie('accessToken', accessTokenCookieOptions);
+        res.clearCookie('refreshToken', refreshTokenCookieOptions);
 
         return sendSuccess(res, {
             statusCode: 200,
-            message: "Logout success !!"
+            message: 'Logout success !!',
         });
-
     } catch (error) {
         const errorMessage =
-            error instanceof Error ? error.message : "Something went wrong";
+            error instanceof Error ? error.message : 'Something went wrong';
         return sendError(res, {
-            code: "INTERNAL_ERROR",
-            message: errorMessage
-        })
+            code: 'INTERNAL_ERROR',
+            message: errorMessage,
+        });
     }
-}
-
+};
 
 export {
     registerUser,
@@ -546,5 +556,5 @@ export {
     googleLogin,
     generateNewAccessToken,
     onboardUser,
-    logout
+    logout,
 };

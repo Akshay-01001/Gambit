@@ -1,6 +1,6 @@
-import React, { createContext, useState } from "react";
+import React, { createContext, useState } from 'react';
 
-type GENDER = "MALE" | "FEMALE" | "OTHER" | null;
+type GENDER = 'MALE' | 'FEMALE' | 'OTHER' | null;
 export interface OnboardingFormData {
     username: string;
     country: string;
@@ -12,7 +12,11 @@ export interface OnboardingFormData {
 type OnboardingContextType = {
     formData: OnboardingFormData;
     setFormData: React.Dispatch<React.SetStateAction<OnboardingFormData>>;
-    handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string, value: string } }) => void;
+    handleChange: (
+        e:
+            | React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+            | { target: { name: string; value: string } },
+    ) => void;
     handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     currentStep: number;
     setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
@@ -23,36 +27,45 @@ type OnboardingContextType = {
 };
 
 const initialFormData: OnboardingFormData = {
-    username: "",
-    country: "",
+    username: '',
+    country: '',
     gender: null,
-    avatar_url: "",
+    avatar_url: '',
     image: null,
 };
 
 const OnboardingContext = createContext<OnboardingContextType>({
     formData: initialFormData,
-    setFormData: () => { },
-    handleChange: () => { },
-    handleFileChange: () => { },
+    setFormData: () => {},
+    handleChange: () => {},
+    handleFileChange: () => {},
     currentStep: 1,
-    setCurrentStep: () => { },
+    setCurrentStep: () => {},
     errors: {},
-    setErrors: () => { },
+    setErrors: () => {},
     validateStep1: () => false,
-    validateAll: () => false
+    validateAll: () => false,
 });
 
-export const OnboardingProvider = ({ children }: { children: React.ReactNode }) => {
-    const [formData, setFormData] = useState<OnboardingFormData>(initialFormData);
+export const OnboardingProvider = ({
+    children,
+}: {
+    children: React.ReactNode;
+}) => {
+    const [formData, setFormData] =
+        useState<OnboardingFormData>(initialFormData);
     const [currentStep, setCurrentStep] = useState<number>(1);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | { target: { name: string, value: string } }) => {
+    const handleChange = (
+        e:
+            | React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+            | { target: { name: string; value: string } },
+    ) => {
         const { name, value } = e.target;
 
         if (errors[name]) {
-            setErrors(prev => {
+            setErrors((prev) => {
                 const newErrors = { ...prev };
                 delete newErrors[name];
                 return newErrors;
@@ -62,10 +75,10 @@ export const OnboardingProvider = ({ children }: { children: React.ReactNode }) 
         setFormData((prev) => {
             return {
                 ...prev,
-                [name]: value
-            }
+                [name]: value,
+            };
         });
-    }
+    };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, files } = e.target;
@@ -73,29 +86,29 @@ export const OnboardingProvider = ({ children }: { children: React.ReactNode }) 
             const file = files[0];
             const url = URL.createObjectURL(file);
 
-            setErrors(prev => {
+            setErrors((prev) => {
                 const newErrors = { ...prev };
                 delete newErrors[name];
                 delete newErrors['avatar_url'];
                 return newErrors;
             });
 
-            setFormData(prev => ({
+            setFormData((prev) => ({
                 ...prev,
                 [name]: file,
-                avatar_url: url
+                avatar_url: url,
             }));
         }
-    }
+    };
 
     const validateStep1 = () => {
         const newErrors: Record<string, string> = {};
         if (!formData.username) newErrors.username = 'Username is required';
         if (!formData.country) newErrors.country = 'Country is required';
         if (!formData.gender) newErrors.gender = 'Gender is required';
-        setErrors(prev => ({ ...prev, ...newErrors }));
+        setErrors((prev) => ({ ...prev, ...newErrors }));
         return Object.keys(newErrors).length === 0;
-    }
+    };
 
     const validateAll = () => {
         const newErrors: Record<string, string> = {};
@@ -105,7 +118,7 @@ export const OnboardingProvider = ({ children }: { children: React.ReactNode }) 
         if (!formData.avatar_url) newErrors.avatar_url = 'Avatar is required';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
-    }
+    };
 
     const value = {
         formData,
@@ -117,14 +130,10 @@ export const OnboardingProvider = ({ children }: { children: React.ReactNode }) 
         errors,
         setErrors,
         validateStep1,
-        validateAll
+        validateAll,
     };
 
-    return (
-        <OnboardingContext value={value}>
-            {children}
-        </OnboardingContext>
-    );
+    return <OnboardingContext value={value}>{children}</OnboardingContext>;
 };
 
 export default OnboardingContext;

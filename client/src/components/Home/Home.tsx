@@ -10,5 +10,5 @@ export const Home = () => {
             <Hero />
             <Footer />
         </div>
-    )
-}
+    );
+};

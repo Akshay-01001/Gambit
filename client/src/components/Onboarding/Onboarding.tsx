@@ -14,11 +14,9 @@ const Onboarding = () => {
             default:
                 return null;
         }
-    }
+    };
 
-    return (
-        getPageFromStep(currentStep)
-    )
-}
+    return getPageFromStep(currentStep);
+};
 
 export default Onboarding;
