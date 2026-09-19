@@ -2,7 +2,6 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '../../store/store';
 import Navbar from '../Home/Navbar';
 import Board from './Board';
-import { gameManager } from '../../game/gameManager';
 import Countdown from 'react-countdown';
 import ResignModal from './ResignModal';
 import { useState, useMemo } from 'react';
@@ -134,7 +133,6 @@ const GamePage = () => {
                                         renderer={({ minutes, seconds }) =>
                                             `${minutes}:${seconds.toString().padStart(2, '0')}`
                                         }
-                                        onComplete={() => gameManager.resign()}
                                     />
                                 ) : (
                                     formatTime(userTime)
@@ -198,8 +196,9 @@ const GamePage = () => {
                                 New game
                             </button>
                             <button
-                                className="w-full py-3.5 bg-background hover:bg-background/80 transition-colors rounded-xl text-white font-semibold flex items-center justify-center gap-2 border border-[#3a3a3a] cursor-pointer"
+                                className={`w-full py-3.5 bg-background transition-colors rounded-xl text-white font-semibold flex items-center justify-center gap-2 border border-[#3a3a3a] ${status === 'playing' ? 'hover:bg-background/80 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
                                 onClick={() => handleDrawModalOpen(true)}
+                                disabled={status !== 'playing'}
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -217,8 +216,9 @@ const GamePage = () => {
                                 Draw
                             </button>
                             <button
-                                className="w-full py-3.5 bg-destructive hover:bg-destructive/90 transition-colors rounded-xl text-white font-bold flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                                className={`w-full py-3.5 bg-destructive transition-colors rounded-xl text-white font-bold flex items-center justify-center gap-2 shadow-lg ${status === 'playing' ? 'hover:bg-destructive/90 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}
                                 onClick={() => handleResignModalOpen(true)}
+                                disabled={status !== 'playing'}
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -235,12 +235,6 @@ const GamePage = () => {
                                     <line x1="4" x2="4" y1="22" y2="15" />
                                 </svg>
                                 Resign
-                            </button>
-                            <button
-                                className="w-full mt-2 py-2 text-gray-400 hover:text-white transition-colors text-sm font-semibold hover:bg-accent hover:rounded-md cursor-pointer"
-                                onClick={() => handleResignModalOpen(false)}
-                            >
-                                Back to home
                             </button>
                         </div>
                     </div>
