@@ -192,15 +192,15 @@ const endGame = async (
                     whiteRating,
                     0.5,
                 );
-                await tx.chessProfile.updateMany({
+                await tx.chessProfile.update({
                     where: { userId: whitePlayerId },
                     data: {
                         totalGames: { increment: 1 },
                         totalGamesDraw: { increment: 1 },
-                        [game_field]: { increment: whiteRatingChange },
+                        [game_field]: { increment: whiteRatingChange }
                     },
                 });
-                await tx.chessProfile.updateMany({
+                await tx.chessProfile.update({
                     where: { userId: blackPlayerId },
                     data: {
                         totalGames: { increment: 1 },
@@ -210,12 +210,8 @@ const endGame = async (
                 });
             } else {
                 const isWhiteWin = data.result === 'WHITE_WIN';
-                const winnerId = isWhiteWin
-                    ? whitePlayerId
-                    : blackPlayerId;
-                const loserId = isWhiteWin
-                    ? blackPlayerId
-                    : whitePlayerId;
+                const winnerId = isWhiteWin ? whitePlayerId : blackPlayerId;
+                const loserId = isWhiteWin ? blackPlayerId : whitePlayerId;
                 const winnerRating = isWhiteWin ? whiteRating : blackRating;
                 const loserRating = isWhiteWin ? blackRating : whiteRating;
                 const winField = isWhiteWin
@@ -252,8 +248,16 @@ const endGame = async (
                     },
                 });
             }
+            // Re-fetch game with updated player ratings
+            const finalGame = await tx.game.findUnique({
+                where: { id: gameId },
+                include: {
+                    blackPlayer: playerSelect,
+                    whitePlayer: playerSelect,
+                },
+            });
 
-            return updatedGame;
+            return finalGame;
         });
 
         if (!txnResult) return null;

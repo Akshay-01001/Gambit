@@ -85,6 +85,7 @@ export interface PlayerInfo {
     country: string;
     blitzRating?: number;
     rapidRating?: number;
+    bulletRating?: number;
 }
 
 export interface Player {

@@ -10,6 +10,7 @@ import {
     type ServerMessage,
     type ClientMessage,
 } from '../types/socketEvents';
+import type { ChessState } from '../types/inex';
 import { toast } from 'react-toastify';
 import React from 'react';
 import DrawOfferToast from '../components/Game/DrawOfferToast';
@@ -122,13 +123,26 @@ class GameManager {
 
             case SocketEvents.GAME_OVER: {
                 const game = data.game_state;
-                const turn = game.fen.split(' ')[1] as 'w' | 'b';
+                const { blackPlayer, whitePlayer, ...rest } = game;
+                const currentPlayers = store.getState().chess.players;
                 store.dispatch(
                     setGame({
-                        id: game.id,
-                        fen: game.fen,
-                        turn,
-                        status: game.status.toLowerCase(),
+                        ...rest,
+                        status: game.status?.toLowerCase() as ChessState['status'],
+                        result: game.result,
+                        endReason: game.endReason,
+                        turn: (game.fen.split(' ')[1] as 'w' | 'b') || game.turn,
+                        players: {
+                            black: blackPlayer || currentPlayers?.black || null,
+                            white: whitePlayer || currentPlayers?.white || null,
+                            clock: currentPlayers?.clock || { white: '', black: '' },
+                            promotion: currentPlayers?.promotion || {
+                                open: false,
+                                from: null,
+                                to: null,
+                                color: null,
+                            },
+                        },
                     }),
                 );
                 break;

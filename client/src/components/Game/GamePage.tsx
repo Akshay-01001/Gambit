@@ -27,9 +27,6 @@ const GamePage = () => {
         blackPlayerId,
         players,
         status,
-        timeControl,
-        gameType,
-        pgn,
         result,
         endReason,
     } = useSelector((state: RootState) => state.chess);
@@ -113,7 +110,6 @@ const GamePage = () => {
                                         renderer={({ minutes, seconds }) =>
                                             `${minutes}:${seconds.toString().padStart(2, '0')}`
                                         }
-                                        onComplete={() => gameManager.resign()}
                                     />
                                 ) : (
                                     formatTime(opponentTime)
