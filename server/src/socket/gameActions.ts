@@ -30,7 +30,13 @@ export function findMatch(
         return;
     }
 
-    if (gameManager.getWaitingPlayers().has(playerId)) return;
+    if (gameManager.getWaitingPlayers().has(playerId)) {
+        gameManager.safeSend(player.ws, {
+            type: SocketEvents.ERROR,
+            message: 'Already searching for a game',
+        });
+        return;
+    }
 
     let opponentId: string | null = null;
 

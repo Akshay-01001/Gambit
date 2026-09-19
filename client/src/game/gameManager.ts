@@ -16,6 +16,14 @@ import DrawOfferToast from '../components/Game/DrawOfferToast';
 
 class GameManager {
     private initialized = false;
+    private matchmakingTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    private clearMatchmakingTimeout() {
+        if (this.matchmakingTimeout) {
+            clearTimeout(this.matchmakingTimeout);
+            this.matchmakingTimeout = null;
+        }
+    }
 
     /**
      * Initialize the socket connection and register the message handler.
@@ -36,6 +44,7 @@ class GameManager {
     private handleServerMessage(data: ServerMessage) {
         switch (data.type) {
             case SocketEvents.MATCH_CREATED: {
+                this.clearMatchmakingTimeout();
                 const { blackPlayer, whitePlayer, ...game } = data.game;
                 store.dispatch(
                     setGame({
@@ -88,6 +97,7 @@ class GameManager {
             }
 
             case SocketEvents.NO_MATCH_FOUND:
+                this.clearMatchmakingTimeout();
                 // Reset the "waiting" status so the Play page shows the button again
                 store.dispatch(setStatus(null));
                 break;
@@ -126,6 +136,11 @@ class GameManager {
 
             case SocketEvents.ERROR:
                 console.error('Server error:', data.message);
+                // If we're in 'waiting' state, reset so the user isn't stuck
+                if (store.getState().chess.status === 'waiting') {
+                    this.clearMatchmakingTimeout();
+                    store.dispatch(setStatus(null));
+                }
                 break;
 
             case SocketEvents.DRAW_OFFERED:
@@ -163,6 +178,18 @@ class GameManager {
 
     public findGame(payload: { game_type: string; game_time: number }) {
         this.sendEvent({ type: SocketEvents.FIND_GAME, payload });
+
+        // Safety timeout: if the server never responds (e.g., socket dropped
+        // mid-flight), reset the waiting state after 35s so the user isn't
+        // stuck forever. This is slightly longer than the server's 30s
+        // matchmaking timeout to avoid racing with NO_MATCH_FOUND.
+        this.clearMatchmakingTimeout();
+        this.matchmakingTimeout = setTimeout(() => {
+            if (store.getState().chess.status === 'waiting') {
+                store.dispatch(setStatus(null));
+            }
+            this.matchmakingTimeout = null;
+        }, 35000);
     }
 
     public reJoinGame(gameId: string) {
