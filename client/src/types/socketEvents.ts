@@ -45,6 +45,7 @@ export interface GameData {
         country: string;
         blitzRating?: number;
         rapidRating?: number;
+        bulletRating?: number;
     };
     whitePlayer?: {
         username: string;
@@ -52,6 +53,7 @@ export interface GameData {
         country: string;
         blitzRating?: number;
         rapidRating?: number;
+        bulletRating?: number;
     };
 }
 
@@ -59,14 +61,14 @@ export interface GameData {
 
 export type ClientMessage =
     | {
-          type: typeof SocketEvents.FIND_GAME;
-          payload: { game_type: string; game_time: number };
-      }
+        type: typeof SocketEvents.FIND_GAME;
+        payload: { game_type: string; game_time: number };
+    }
     | { type: typeof SocketEvents.REJOIN_GAME; gameId: string }
     | {
-          type: typeof SocketEvents.MAKE_MOVE;
-          payload: { from: string; to: string; promotion?: string };
-      }
+        type: typeof SocketEvents.MAKE_MOVE;
+        payload: { from: string; to: string; promotion?: string };
+    }
     | { type: typeof SocketEvents.RESIGN_GAME; gameId: string }
     | { type: typeof SocketEvents.OFFER_DRAW; gameId: string }
     | { type: typeof SocketEvents.ACCEPT_DRAW; gameId: string };
@@ -75,10 +77,10 @@ export type ClientMessage =
 
 export type ServerMessage =
     | {
-          type: typeof SocketEvents.MATCH_CREATED;
-          gameId: string;
-          game: GameData;
-      }
+        type: typeof SocketEvents.MATCH_CREATED;
+        gameId: string;
+        game: GameData;
+    }
     | { type: typeof SocketEvents.GAME_STATE; game_state: GameData }
     | { type: typeof SocketEvents.NO_MATCH_FOUND }
     | { type: typeof SocketEvents.MOVE_MADE; game_state: GameData }

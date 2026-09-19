@@ -53,6 +53,7 @@ export interface ChessState {
             avatarUrl: string;
             blitzRating?: number;
             rapidRating?: number;
+            bulletRating?: number;
             country: string;
         } | null;
         white: {
@@ -60,6 +61,7 @@ export interface ChessState {
             avatarUrl: string;
             blitzRating?: number;
             rapidRating?: number;
+            bulletRating?: number;
             country: string;
         } | null;
         clock: {

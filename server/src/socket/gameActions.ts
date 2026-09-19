@@ -564,7 +564,7 @@ export function fieldByGameType(game_type: GameType) {
     } else if (game_type === 'RAPID') {
         return 'rapidRating';
     }
-    return '';
+    return null;
 }
 
 export function calculateExpectedScore(
