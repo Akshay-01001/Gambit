@@ -9,7 +9,11 @@ import { SocketEvents } from '../types/socketEvents';
 import { AuthenticatedWebSocket } from './socket';
 import { Chess } from 'chess.js';
 import type { Game, EndGameData } from '../types/types';
-import type { GameResult, GameEndReason } from '../generated/prisma/enums';
+import type {
+    GameResult,
+    GameEndReason,
+    GameType,
+} from '../generated/prisma/enums';
 
 export function findMatch(
     playerId: string,
@@ -544,4 +548,34 @@ function startTurnTimer(gameId: string, timeLeftMs: number) {
     }, timeLeftMs);
 
     gameManager.setTurnTimer(gameId, timer);
+}
+
+export function fieldByGameType(game_type: GameType) {
+    if (game_type === 'BLITZ') {
+        return 'blitzRating';
+    } else if (game_type === 'BULLET') {
+        return 'bulletRating';
+    } else if (game_type === 'RAPID') {
+        return 'rapidRating';
+    }
+    return '';
+}
+
+export function calculateExpectedScore(
+    player_rating: number,
+    opponent_rating: number,
+) {
+    const power = Math.pow(10, (opponent_rating - player_rating) / 400);
+    return 1 / (1 + power);
+}
+
+export function calculateRatingChange(
+    playerRating: number,
+    opponentRating: number,
+    actualScore: number,
+    kFactor = 32,
+) {
+    const expectedScore = calculateExpectedScore(playerRating, opponentRating);
+
+    return Math.round(kFactor * (actualScore - expectedScore));
 }

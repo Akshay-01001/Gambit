@@ -6,6 +6,7 @@ import {
 } from '../generated/prisma/enums';
 import { prisma } from '../lib/prisma';
 import type { Game, MoveData, EndGameData, PlayerInfo } from '../types/types';
+import { calculateRatingChange, fieldByGameType } from './gameActions';
 
 const playerSelect = {
     select: {
@@ -16,6 +17,7 @@ const playerSelect = {
             select: {
                 blitzRating: true,
                 rapidRating: true,
+                bulletRating: true,
             },
         },
     },
@@ -168,23 +170,68 @@ const endGame = async (
                 },
             });
 
+            const game_field = fieldByGameType(game.gameType);
+
+            if (!game_field) {
+                return null;
+            }
+
+            const whiteRating =
+                updatedGame.whitePlayer?.chessProfile?.[game_field] ?? 100;
+            const blackRating =
+                updatedGame.blackPlayer?.chessProfile?.[game_field] ?? 100;
+
             if (data.result === 'DRAW') {
+                const whiteRatingChange = calculateRatingChange(
+                    whiteRating,
+                    blackRating,
+                    0.5,
+                );
+                const blackRatingChange = calculateRatingChange(
+                    blackRating,
+                    whiteRating,
+                    0.5,
+                );
                 await tx.chessProfile.updateMany({
-                    where: { userId: { in: [whitePlayerId, blackPlayerId] } },
+                    where: { userId: whitePlayerId },
                     data: {
                         totalGames: { increment: 1 },
                         totalGamesDraw: { increment: 1 },
+                        [game_field]: { increment: whiteRatingChange },
+                    },
+                });
+                await tx.chessProfile.updateMany({
+                    where: { userId: blackPlayerId },
+                    data: {
+                        totalGames: { increment: 1 },
+                        totalGamesDraw: { increment: 1 },
+                        [game_field]: { increment: blackRatingChange },
                     },
                 });
             } else {
-                const winnerId =
-                    data.result === 'WHITE_WIN' ? whitePlayerId : blackPlayerId;
-                const loserId =
-                    data.result === 'WHITE_WIN' ? blackPlayerId : whitePlayerId;
-                const winField =
-                    data.result === 'WHITE_WIN'
-                        ? 'totalWhiteWins'
-                        : 'totalBlackWins';
+                const isWhiteWin = data.result === 'WHITE_WIN';
+                const winnerId = isWhiteWin
+                    ? whitePlayerId
+                    : blackPlayerId;
+                const loserId = isWhiteWin
+                    ? blackPlayerId
+                    : whitePlayerId;
+                const winnerRating = isWhiteWin ? whiteRating : blackRating;
+                const loserRating = isWhiteWin ? blackRating : whiteRating;
+                const winField = isWhiteWin
+                    ? 'totalWhiteWins'
+                    : 'totalBlackWins';
+
+                const winnerRatingChange = calculateRatingChange(
+                    winnerRating,
+                    loserRating,
+                    1,
+                );
+                const loserRatingChange = calculateRatingChange(
+                    loserRating,
+                    winnerRating,
+                    0,
+                );
 
                 await tx.chessProfile.update({
                     where: { userId: winnerId },
@@ -192,6 +239,7 @@ const endGame = async (
                         totalGames: { increment: 1 },
                         totalGamesWon: { increment: 1 },
                         [winField]: { increment: 1 },
+                        [game_field]: { increment: winnerRatingChange },
                     },
                 });
 
@@ -200,6 +248,7 @@ const endGame = async (
                     data: {
                         totalGames: { increment: 1 },
                         totalGamesLost: { increment: 1 },
+                        [game_field]: { increment: loserRatingChange },
                     },
                 });
             }

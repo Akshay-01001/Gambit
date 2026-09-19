@@ -1,8 +1,9 @@
 import { Server as HttpServer, IncomingMessage } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
-import { verifyAccessToken, TokenPayload } from '../utils/tokens';
+import { verifyAccessToken } from '../utils/tokens';
 import { v7 as uuid } from 'uuid';
 import { gameManager } from './gameManager';
+import { TokenPayload } from '../types/types';
 
 export interface AuthenticatedWebSocket extends WebSocket {
     user?: TokenPayload;

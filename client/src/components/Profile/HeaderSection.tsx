@@ -99,7 +99,7 @@ const HeaderSection: React.FC = () => {
                     {statsData.map((stat, index) => (
                         <div
                             key={index}
-                            className="bg-background/40 backdrop-blur-sm rounded-xl border border-white/5"
+                            className="bg-background/40 backdrop-blur-sm rounded-xl border border-white/10 shadow-sm"
                         >
                             <StatsCard title={stat.title} count={stat.count} />
                         </div>
